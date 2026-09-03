@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>岐黃學堂 — 中醫學習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.0/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.0/firebase-firestore-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.0/firebase-storage-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<style>
+:root {
+  --bg-0:#fef5ee;--bg-1:#fae8d8;--bg-card:#fffbf7;--bg-card-hover:#fff3ea;
+  --text-0:#3d2417;--text-1:#7a5c4f;--text-2:#a68b7b;
+  --accent:#d97748;--accent-light:#fef0e6;--accent-hover:#c4643a;
+  --gold:#c49a3d;--gold-light:#fdf6e3;
+  --danger:#c94040;--danger-light:#fde8e8;
+  --border:#e8d0bc;--border-light:#f0dece;
+  --shadow:0 2px 14px rgba(80,40,10,0.07);
+  --shadow-lg:0 8px 32px rgba(80,40,10,0.12);
+  --radius:14px;--radius-sm:10px;--radius-lg:20px;
+  --nav-h:62px;--header-h:54px;
+  --font:'Nunito','Noto Sans TC',sans-serif;
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+html.dark {
+  --bg-0:#1a1210;--bg-1:#241c18;--bg-card:#2e231d;--bg-card-hover:#382c24;
+  --text-0:#f0dcc8;--text-1:#b89a84;--text-2:#7d6555;
+  --accent:#e09060;--accent-light:#2e2118;--accent-hover:#eda878;
+  --gold:#d4a860;--gold-light:#2a2214;
+  --danger:#e05050;--danger-light:#2e1818;
+  --border:#3e3028;--border-light:#302420;
+  --shadow:0 2px 14px rgba(0,0,0,0.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg-0);color:var(--text-0);
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+input,select,textarea,button{font-family:inherit;font-size:16px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* === SETUP === */
+#setup-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#d97748 0%,#c4643a 50%,#a85230 100%);padding:20px;overflow-y:auto}
+.setup-box{background:var(--bg-card);border-radius:var(--radius-lg);padding:36px 26px;
+  max-width:440px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
+.setup-logo{font-weight:900;font-size:2.2rem;color:var(--accent);margin-bottom:4px;letter-spacing:3px}
+.setup-sub{font-size:0.92rem;color:var(--text-2);margin-bottom:24px}
+.setup-box label{display:block;text-align:left;font-size:0.85rem;color:var(--text-1);margin-bottom:4px;margin-top:12px;font-weight:600}
+.setup-box textarea{width:100%;min-height:130px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;background:var(--bg-0);color:var(--text-0);resize:vertical;font-size:13px;font-family:monospace}
+.setup-box textarea:focus{border-color:var(--accent);outline:none}
+.setup-hint{font-size:0.76rem;color:var(--text-2);text-align:left;margin-top:4px;line-height:1.5}
+.setup-btns{display:flex;gap:10px;margin-top:20px}
+.setup-btns button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;cursor:pointer;transition:var(--transition)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-1);color:var(--text-1);border:1.5px solid var(--border) !important}
+.btn-secondary:hover{background:var(--bg-card-hover)}
+.setup-err{color:var(--danger);font-size:0.85rem;margin-top:8px;min-height:1.2em}
+
+/* === SHELL === */
+#app-main{display:none;height:100%;flex-direction:column;overflow:hidden}
+#app-main.active{display:flex}
+.app-header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;background:var(--bg-card);border-bottom:1px solid var(--border-light);flex-shrink:0;z-index:100}
+.app-header .logo{font-weight:900;font-size:1.2rem;color:var(--accent);letter-spacing:2px;cursor:pointer}
+.header-actions{display:flex;gap:4px}
+.header-actions button{width:36px;height:36px;border:none;background:transparent;color:var(--text-1);
+  font-size:1.05rem;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.header-actions button:hover,.header-actions button.active{background:var(--accent-light);color:var(--accent)}
+.search-bar{display:none;padding:8px 14px;background:var(--bg-card);border-bottom:1px solid var(--border-light)}
+.search-bar.open{display:block}
+.search-bar input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:24px;
+  background:var(--bg-0);color:var(--text-0);font-size:16px}
+.search-bar input:focus{border-color:var(--accent);outline:none}
+.sub-header{flex-shrink:0;background:var(--bg-card);border-bottom:1px solid var(--border-light)}
+.pill-row{display:flex;gap:6px;padding:7px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pill-row::-webkit-scrollbar{display:none}
+.pill{padding:5px 13px;border-radius:18px;font-size:0.8rem;font-weight:600;white-space:nowrap;
+  border:1.5px solid var(--border);color:var(--text-1);background:var(--bg-card);cursor:pointer;transition:var(--transition);flex-shrink:0}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pill.gold{border-color:var(--gold);color:var(--gold)}
+.pill.gold.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + 16px);-webkit-overflow-scrolling:touch}
+.view{display:none;padding:14px;animation:fadeUp 0.3s ease}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Bottom nav - 6 tabs */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);display:flex;
+  background:var(--bg-card);border-top:1px solid var(--border-light);z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:none;background:transparent;color:var(--text-2);cursor:pointer;font-size:0.62rem;font-weight:600;
+  transition:var(--transition);position:relative;padding:0 2px}
+.nav-btn i{font-size:1.05rem;transition:var(--transition)}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active i{transform:scale(1.12)}
+.nav-btn .badge{position:absolute;top:5px;right:calc(50% - 16px);background:var(--danger);color:#fff;
+  font-size:0.55rem;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;padding:0 3px}
+
+/* === CARDS === */
+.card{background:var(--bg-card);border-radius:var(--radius);padding:13px 15px;margin-bottom:10px;
+  border-left:4px solid var(--accent);box-shadow:var(--shadow);cursor:pointer;transition:var(--transition)}
+.card:hover{background:var(--bg-card-hover);transform:translateX(2px)}
+.card:active{transform:scale(0.98)}
+.card-title{font-weight:800;font-size:1.02rem;margin-bottom:2px;display:flex;align-items:center;gap:7px}
+.card-sub{font-size:0.8rem;color:var(--text-2);margin-bottom:3px}
+.card-preview{font-size:0.84rem;color:var(--text-1);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-meta{display:flex;gap:7px;margin-top:5px;font-size:0.73rem;color:var(--text-2);flex-wrap:wrap}
+.card-meta span{display:flex;align-items:center;gap:3px}
+.card-thumbs{display:flex;gap:4px;margin-top:7px}
+.card-thumbs img{width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid var(--border-light)}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-2)}
+.empty-state i{font-size:2.8rem;margin-bottom:14px;opacity:0.35}
+.empty-state p{font-size:0.92rem}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 18px);right:18px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;font-size:1.4rem;
+  box-shadow:0 4px 16px rgba(217,119,72,0.35);cursor:pointer;z-index:150;
+  display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.fab:hover{transform:scale(1.1);background:var(--accent-hover)}
+.fab:active{transform:scale(0.95)}
+
+/* === DETAIL === */
+.detail-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.detail-back{width:36px;height:36px;border:none;background:var(--bg-1);color:var(--text-1);border-radius:50%;
+  cursor:pointer;font-size:0.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition)}
+.detail-back:hover{background:var(--accent-light);color:var(--accent)}
+.detail-title{font-weight:900;font-size:1.4rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-actions{display:flex;gap:5px;flex-shrink:0}
+.detail-actions button{width:34px;height:34px;border:none;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:var(--transition)}
+.btn-edit{background:var(--gold-light);color:var(--gold)}
+.btn-edit:hover{background:var(--gold);color:#fff}
+.btn-del{background:var(--danger-light);color:var(--danger)}
+.btn-del:hover{background:var(--danger);color:#fff}
+.detail-section{margin-bottom:16px}
+.detail-label{font-size:0.76rem;color:var(--text-2);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.detail-value{font-size:0.93rem;line-height:1.7;white-space:pre-wrap}
+.detail-value.empty{color:var(--text-2);font-style:italic;font-size:0.84rem}
+.detail-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.badge{padding:4px 10px;border-radius:14px;font-size:0.74rem;font-weight:700}
+.badge-accent{background:var(--accent-light);color:var(--accent)}
+.badge-gold{background:var(--gold-light);color:var(--gold)}
+.img-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;margin-top:7px}
+.img-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border-light);transition:var(--transition)}
+.img-gallery img:hover{transform:scale(1.03);box-shadow:var(--shadow)}
+.comp-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:5px}
+.comp-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:18px;background:var(--accent-light);border:1px solid var(--border)}
+.comp-chip .c-name{font-weight:700;font-size:0.84rem;color:var(--accent)}
+.comp-chip .c-dose{font-size:0.76rem;color:var(--text-2)}
+
+/* === FORM === */
+.form-title{font-weight:800;font-size:1.15rem;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:0.82rem;color:var(--text-1);font-weight:700;margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 13px;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-0);
+  color:var(--text-0);font-size:16px;transition:var(--transition)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(217,119,72,0.1)}
+.form-group textarea{min-height:75px;resize:vertical;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-submit{display:flex;gap:10px;margin-top:22px}
+.form-submit button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;cursor:pointer;transition:var(--transition)}
+.dupe-warn{color:var(--gold);font-size:0.79rem;margin-top:4px;display:flex;align-items:center;gap:4px}
+.img-upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:22px;text-align:center;
+  color:var(--text-2);cursor:pointer;transition:var(--transition);margin-top:7px}
+.img-upload-zone:hover,.img-upload-zone.dragover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.img-upload-zone i{font-size:1.6rem;margin-bottom:6px}
+.img-upload-zone p{font-size:0.83rem}
+.img-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px;margin-top:8px}
+.img-preview{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border-light)}
+.img-preview img{width:100%;height:100%;object-fit:cover}
+.img-preview .remove-img{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;
+  background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;font-size:0.68rem;
+  display:flex;align-items:center;justify-content:center}
+.img-preview .upload-progress{position:absolute;inset:0;background:rgba(0,0,0,0.5);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8rem}
+
+/* Tag / autocomplete inputs */
+.tag-input-wrap{position:relative}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.tag-item{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;
+  background:var(--accent-light);color:var(--accent);font-size:0.8rem;font-weight:700}
+.tag-item button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;padding:0 2px;opacity:0.7}
+.tag-item button:hover{opacity:1}
+.ac-dropdown{position:absolute;left:0;right:0;top:100%;z-index:50;background:var(--bg-card);
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);max-height:180px;overflow-y:auto;
+  box-shadow:var(--shadow-lg);display:none}
+.ac-dropdown.show{display:block}
+.ac-item{padding:8px 12px;cursor:pointer;font-size:0.86rem;transition:background 0.15s}
+.ac-item:hover{background:var(--accent-light)}
+.ac-item .ac-sub{font-size:0.73rem;color:var(--text-2);margin-left:6px}
+.herb-list-items{margin-bottom:7px}
+.herb-row{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg-0);border-radius:var(--radius-sm);margin-bottom:5px}
+.herb-row .h-name{font-weight:700;font-size:0.86rem;min-width:50px;color:var(--accent)}
+.herb-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-size:14px;color:var(--text-0)}
+.herb-row input:focus{border-color:var(--accent);outline:none}
+.herb-row button{width:26px;height:26px;border:none;border-radius:50%;background:var(--danger-light);
+  color:var(--danger);cursor:pointer;font-size:0.72rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+/* === HOME === */
+.home-greeting{font-weight:900;font-size:1.7rem;margin-bottom:3px;line-height:1.3}
+.home-sub{color:var(--text-2);margin-bottom:22px;font-size:0.88rem}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:22px}
+.stat-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;text-align:center;
+  box-shadow:var(--shadow);border-top:3px solid var(--accent)}
+.stat-card:nth-child(2){border-top-color:var(--gold)}
+.stat-card:nth-child(3){border-top-color:#7c6fbc}
+.stat-card:nth-child(4){border-top-color:#5ea0a0}
+.stat-card:nth-child(5){border-top-color:var(--danger)}
+.stat-num{font-weight:900;font-size:1.7rem;line-height:1}
+.stat-label{font-size:0.76rem;color:var(--text-2);margin-top:3px}
+.section-title{font-weight:800;font-size:1.02rem;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:22px}
+.quick-btn{display:flex;align-items:center;gap:9px;padding:13px;background:var(--bg-card);border-radius:var(--radius);
+  border:1.5px solid var(--border);cursor:pointer;transition:var(--transition)}
+.quick-btn:hover{border-color:var(--accent);background:var(--accent-light)}
+.quick-btn i{font-size:1.1rem;color:var(--accent);width:18px;text-align:center}
+.quick-btn span{font-size:0.83rem;font-weight:700}
+
+/* === QUIZ === */
+.quiz-setup{max-width:480px;margin:0 auto}
+.quiz-card-wrap{max-width:480px;margin:0 auto;perspective:1000px}
+.quiz-progress{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:0.84rem;color:var(--text-2)}
+.quiz-progress-bar{flex:1;height:6px;background:var(--bg-1);border-radius:3px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.4s ease}
+.quiz-card{min-height:300px;border-radius:var(--radius-lg);position:relative;transform-style:preserve-3d;transition:transform 0.5s ease;cursor:pointer}
+.quiz-card.flipped{transform:rotateY(180deg)}
+.quiz-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius-lg);padding:26px 22px;
+  display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow-y:auto}
+.quiz-front{background:linear-gradient(145deg,var(--bg-card) 0%,var(--accent-light) 100%);align-items:center;justify-content:center;text-align:center}
+.quiz-front .q-name{font-weight:900;font-size:1.7rem;margin-bottom:7px}
+.quiz-front .q-hint{color:var(--text-2);font-size:0.84rem}
+.quiz-front .q-tap{position:absolute;bottom:18px;color:var(--text-2);font-size:0.78rem;opacity:0.5}
+.quiz-back{background:var(--bg-card);transform:rotateY(180deg)}
+.quiz-back .q-field{margin-bottom:9px}
+.quiz-back .q-field-label{font-size:0.73rem;color:var(--text-2);font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.quiz-back .q-field-value{font-size:0.88rem;line-height:1.6;white-space:pre-wrap}
+.quiz-rating{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}
+.quiz-rating button{padding:11px 6px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:0.78rem;
+  cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:3px}
+.quiz-rating button:hover{transform:scale(1.05)}
+.rate-again{background:#fee2e2;color:#dc2626}
+.rate-hard{background:#fef3c7;color:#d97706}
+.rate-good{background:#d1fae5;color:#059669}
+.rate-easy{background:#dbeafe;color:#2563eb}
+.quiz-results{max-width:480px;margin:0 auto;text-align:center}
+.quiz-results .result-score{font-weight:900;font-size:2.8rem;color:var(--accent);margin:18px 0}
+
+/* === SETTINGS === */
+.settings-section{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.settings-section h3{font-size:0.92rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.settings-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-light)}
+.settings-item:last-child{border-bottom:none}
+.settings-item span{font-size:0.86rem}
+.settings-item button{padding:5px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-0);color:var(--text-1);font-size:0.8rem;cursor:pointer;transition:var(--transition)}
+.settings-item button:hover{border-color:var(--accent);color:var(--accent)}
+.lm-item{display:flex;align-items:center;gap:7px;padding:7px;background:var(--bg-0);border-radius:var(--radius-sm);margin-bottom:5px}
+.lm-item span{flex:1;font-size:0.86rem}
+.lm-item button{width:26px;height:26px;border:none;border-radius:50%;background:var(--bg-card);cursor:pointer;
+  font-size:0.72rem;color:var(--text-1);display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.lm-item button:hover{color:var(--accent);background:var(--accent-light)}
+
+/* === LIGHTBOX === */
+.lightbox{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;flex-direction:column}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:80vh;object-fit:contain;border-radius:var(--radius-sm)}
+.lightbox-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border:none;
+  background:rgba(255,255,255,0.15);color:#fff;font-size:1.1rem;border-radius:50%;cursor:pointer}
+.lightbox-nav{position:absolute;top:50%;width:38px;height:38px;border:none;background:rgba(255,255,255,0.15);
+  color:#fff;font-size:1rem;border-radius:50%;cursor:pointer;transform:translateY(-50%)}
+.lightbox-prev{left:10px}
+.lightbox-next{right:10px}
+.lightbox-counter{color:rgba(255,255,255,0.6);font-size:0.83rem;margin-top:10px}
+
+/* === MODAL === */
+.modal-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);display:flex;
+  align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--bg-card);border-radius:var(--radius-lg);padding:22px;max-width:400px;
+  width:100%;box-shadow:var(--shadow-lg);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-weight:800;font-size:1.05rem;margin-bottom:10px}
+.modal-body{font-size:0.88rem;color:var(--text-1);margin-bottom:18px;line-height:1.6;white-space:pre-wrap}
+.modal-body input,.modal-body textarea{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-0);color:var(--text-0);font-size:16px;margin-top:7px}
+.modal-body input:focus,.modal-body textarea:focus{border-color:var(--accent);outline:none}
+.modal-btns{display:flex;gap:7px;justify-content:flex-end}
+.modal-btns button{padding:9px 18px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:0.88rem;cursor:pointer;transition:var(--transition)}
+
+/* === TOAST === */
+.toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6000;display:flex;flex-direction:column;gap:7px;pointer-events:none;max-width:90vw}
+.toast{padding:11px 18px;border-radius:var(--radius-sm);font-size:0.86rem;font-weight:600;box-shadow:var(--shadow-lg);animation:toastIn 0.3s ease;pointer-events:auto}
+.toast.success{background:#059669;color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+.toast.info{background:var(--accent);color:#fff}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){
+  .home-greeting{font-size:1.3rem}
+  .quick-actions{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .quiz-card{min-height:260px}
+  .quiz-front .q-name{font-size:1.3rem}
+  .detail-title{font-size:1.15rem}
+  .stats-grid{gap:7px}
+}
+</style>
+</head>
+<body>
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-logo">🌿 岐黃學堂</div>
+    <div class="setup-sub">中醫學習助手</div>
+    <label>Firebase 設定（JSON 格式）</label>
+    <textarea id="firebase-config-input" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+    <div class="setup-hint">
+      請至 Firebase Console &rarr; 專案設定 &rarr; 一般 &rarr; 您的應用程式，<br>
+      複製 <code>firebaseConfig</code> 物件並貼上。
+    </div>
+    <div class="setup-err" id="setup-err"></div>
+    <div class="setup-btns">
+      <button class="btn-secondary" id="btn-skip-setup">略過（本機模式）</button>
+      <button class="btn-primary" id="btn-connect-fb">連接 Firebase</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-main">
+  <header class="app-header">
+    <div class="logo" id="logo-home">🌿 岐黃學堂</div>
+    <div class="header-actions">
+      <button id="btn-search" title="搜尋"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button id="btn-settings" title="設定"><i class="fa-solid fa-gear"></i></button>
+    </div>
+  </header>
+  <div class="search-bar" id="search-bar"><input type="text" id="search-input" placeholder="搜尋…"></div>
+  <div class="sub-header" id="sub-header">
+    <div class="pill-row" id="level-pills"></div>
+    <div class="pill-row" id="category-pills"></div>
+  </div>
+  <div class="content-area" id="content-area">
+    <div class="view" id="view-home"></div>
+    <div class="view" id="view-list"></div>
+    <div class="view" id="view-detail"></div>
+    <div class="view" id="view-form"></div>
+    <div class="view" id="view-quiz-setup"></div>
+    <div class="view" id="view-quiz-play"></div>
+    <div class="view" id="view-quiz-results"></div>
+    <div class="view" id="view-settings"></div>
+  </div>
+  <button class="fab" id="fab" style="display:none"><i class="fa-solid fa-plus"></i></button>
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" data-tab="home"><i class="fa-solid fa-house"></i><span>首頁</span></button>
+    <button class="nav-btn" data-tab="herbs"><i class="fa-solid fa-leaf"></i><span>中藥</span></button>
+    <button class="nav-btn" data-tab="formulas"><i class="fa-solid fa-mortar-pestle"></i><span>藥方</span></button>
+    <button class="nav-btn" data-tab="acupoints"><i class="fa-solid fa-crosshairs"></i><span>穴道</span></button>
+    <button class="nav-btn" data-tab="theories"><i class="fa-solid fa-book-open"></i><span>筆記</span></button>
+    <button class="nav-btn" data-tab="quiz"><i class="fa-solid fa-brain"></i><span>測驗</span><span class="badge" id="due-badge" style="display:none">0</span></button>
+  </nav>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lb-close"><i class="fa-solid fa-xmark"></i></button>
+  <button class="lightbox-nav lightbox-prev" id="lb-prev"><i class="fa-solid fa-chevron-left"></i></button>
+  <img id="lightbox-img" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lb-next"><i class="fa-solid fa-chevron-right"></i></button>
+  <div class="lightbox-counter" id="lightbox-counter"></div>
+</div>
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+(function() {
+"use strict";
+
+/* === SECTIONS === */
+var SECTIONS = {
+  herbs: {
+    key:'herbs',collection:'herbs',name:'中藥',icon:'fa-leaf',
+    nameField:'name',nameLabel:'藥名',
+    fields:[
+      {key:'name',label:'藥名',type:'text',required:true,placeholder:'如：黃芪'},
+      {key:'pinyin',label:'拼音',type:'text',placeholder:'如：Huáng Qí'},
+      {key:'nature',label:'性味',type:'text',placeholder:'如：甘，微溫'},
+      {key:'meridians',label:'歸經',type:'text',placeholder:'如：脾、肺經'},
+      {key:'functions',label:'功效',type:'textarea',placeholder:''},
+      {key:'usage',label:'用法用量',type:'textarea',placeholder:''},
+      {key:'contraindications',label:'禁忌',type:'textarea',placeholder:''},
+      {key:'relatedFormulas',label:'所屬藥方',type:'formula-tags',placeholder:'搜尋藥方…'},
+      {key:'notes',label:'備註',type:'textarea',placeholder:''}
+    ],
+    categoryLabel:'分類',
+    defaultCategories:['解表藥','清熱藥','瀉下藥','祛風濕藥','化濕藥','利水滲濕藥','溫裡藥','理氣藥','消食藥','驅蟲藥','止血藥','活血化瘀藥','化痰止咳平喘藥','安神藥','平肝息風藥','開竅藥','補虛藥','收澀藥','外用藥'],
+    quizFront:function(i){return i.name;},
+    quizHint:function(i){return i.category||'';},
+    quizBack:function(i){return [{label:'性味',value:i.nature},{label:'歸經',value:i.meridians},{label:'功效',value:i.functions},{label:'用法用量',value:i.usage},{label:'禁忌',value:i.contraindications},{label:'備註',value:i.notes}].filter(function(f){return f.value;});}
+  },
+  formulas: {
+    key:'formulas',collection:'formulas',name:'藥方',icon:'fa-mortar-pestle',
+    nameField:'name',nameLabel:'方名',
+    fields:[
+      {key:'name',label:'方名',type:'text',required:true,placeholder:'如：四物湯'},
+      {key:'source',label:'出處',type:'text',placeholder:'如：太平惠民和劑局方'},
+      {key:'composition',label:'組成藥材',type:'herb-list'},
+      {key:'functions',label:'功效',type:'textarea',placeholder:''},
+      {key:'indications',label:'主治',type:'textarea',placeholder:''},
+      {key:'usage',label:'用法',type:'textarea',placeholder:''},
+      {key:'notes',label:'備註',type:'textarea',placeholder:''}
+    ],
+    categoryLabel:'分類',
+    defaultCategories:['解表劑','瀉下劑','和解劑','清熱劑','溫裡劑','補益劑','固澀劑','安神劑','開竅劑','理氣劑','理血劑','治風劑','治燥劑','祛濕劑','祛痰劑','消食劑','驅蟲劑','外用劑'],
+    quizFront:function(i){return i.name;},
+    quizHint:function(i){return i.category||'';},
+    quizBack:function(i){
+      var cs='';if(i.composition&&i.composition.length){cs=i.composition.map(function(c){return c.name+(c.dosage?'（'+c.dosage+'）':'');}).join('、');}
+      return [{label:'出處',value:i.source},{label:'組成',value:cs},{label:'功效',value:i.functions},{label:'主治',value:i.indications},{label:'用法',value:i.usage},{label:'備註',value:i.notes}].filter(function(f){return f.value;});
+    }
+  },
+  acupoints: {
+    key:'acupoints',collection:'acupoints',name:'經脈穴道',icon:'fa-crosshairs',
+    nameField:'name',nameLabel:'穴名',
+    fields:[
+      {key:'name',label:'穴名',type:'text',required:true,placeholder:'如：合谷'},
+      {key:'code',label:'國際代碼',type:'text',placeholder:'如：LI4'},
+      {key:'location',label:'定位',type:'textarea',placeholder:''},
+      {key:'indications',label:'主治',type:'textarea',placeholder:''},
+      {key:'needling',label:'刺灸法',type:'textarea',placeholder:''},
+      {key:'notes',label:'備註',type:'textarea',placeholder:''}
+    ],
+    categoryLabel:'經脈',
+    defaultCategories:['手太陰肺經','手陽明大腸經','足陽明胃經','足太陰脾經','手少陰心經','手太陽小腸經','足太陽膀胱經','足少陰腎經','手厥陰心包經','手少陽三焦經','足少陽膽經','足厥陰肝經','督脈','任脈','經外奇穴'],
+    quizFront:function(i){return i.name;},
+    quizHint:function(i){return [i.code,i.category].filter(Boolean).join(' · ');},
+    quizBack:function(i){return [{label:'經脈',value:i.category},{label:'代碼',value:i.code},{label:'定位',value:i.location},{label:'主治',value:i.indications},{label:'刺灸法',value:i.needling},{label:'備註',value:i.notes}].filter(function(f){return f.value;});}
+  },
+  theories: {
+    key:'theories',collection:'theories',name:'理論筆記',icon:'fa-book-open',
+    nameField:'title',nameLabel:'標題',
+    fields:[
+      {key:'title',label:'標題',type:'text',required:true,placeholder:''},
+      {key:'content',label:'內容',type:'textarea-lg',placeholder:'在此撰寫筆記…'},
+      {key:'tags',label:'標籤（逗號分隔）',type:'text',placeholder:'如：陰陽,五行'},
+      {key:'notes',label:'備註',type:'textarea',placeholder:''}
+    ],
+    categoryLabel:'分類',
+    defaultCategories:['陰陽五行','藏象學說','氣血津液','經絡學說','病因病機','診法','辨證','治則治法','方劑學','其他'],
+    quizFront:null,quizHint:null,quizBack:null
+  }
+};
+
+var ALL_SECTIONS = ['herbs','formulas','acupoints','theories'];
+var QUIZZABLE = ['herbs','formulas','acupoints'];
+
+/* === STATE === */
+var state = {
+  tab:'home',section:null,view:'list',currentItem:null,editing:false,
+  filter:{herbs:{level:null,category:null,search:''},formulas:{level:null,category:null,search:''},acupoints:{level:null,category:null,search:''},theories:{level:null,category:null,search:''}},
+  data:{herbs:[],formulas:[],acupoints:[],theories:[]},
+  config:{levels:{herbs:[],formulas:[],acupoints:[],theories:[]}},
+  fb:{app:null,db:null,storage:null,ready:false},
+  quiz:{active:false,section:'herbs',cards:[],idx:0,flipped:false,results:[]},
+  formImages:{existing:[],pending:[]},
+  formComposition:[],
+  formFormulaTags:[],
+  lightbox:{images:[],idx:0}
+};
+
+/* === STORAGE === */
+var PREFIX='qhxt_';var _mem={};var _ls=null;
+try{var _t='__t__';window['local'+'Storage'].setItem(_t,'1');window['local'+'Storage'].removeItem(_t);_ls=window['local'+'Storage'];}catch(e){}
+function _save(k,v){var key=PREFIX+k;_mem[key]=v;if(_ls)try{_ls.setItem(key,JSON.stringify(v));}catch(e){}}
+function _load(k,fb){var key=PREFIX+k;if(_ls)try{var r=_ls.getItem(key);if(r!==null)return JSON.parse(r);}catch(e){}return(key in _mem)?_mem[key]:fb;}
+
+/* === UTILS === */
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function debounce(fn,ms){var t;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
+function toast(msg,type){var w=document.getElementById('toast-wrap'),t=document.createElement('div');t.className='toast '+(type||'success');t.textContent=msg;w.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='0.3s';setTimeout(function(){t.remove();},300);},2800);}
+
+/* === DIALOGS === */
+function showModal(o){return new Promise(function(resolve){var ov=document.createElement('div');ov.className='modal-overlay';var cb=o.cancel!==false?'<button class="btn-secondary" data-act="cancel">'+esc(o.cancelText||'取消')+'</button>':'';ov.innerHTML='<div class="modal-box"><div class="modal-title">'+esc(o.title||'')+'</div><div class="modal-body">'+(o.html||esc(o.message||''))+'</div><div class="modal-btns">'+cb+'<button class="btn-primary" data-act="ok">'+esc(o.okText||'確定')+'</button></div></div>';function close(v){ov.remove();resolve(v);}var ce=ov.querySelector('[data-act="cancel"]');if(ce)ce.addEventListener('click',function(){close(null);});ov.querySelector('[data-act="ok"]').addEventListener('click',function(){var inp=ov.querySelector('input,textarea');close(inp?inp.value:true);});ov.addEventListener('click',function(e){if(e.target===ov&&o.cancel!==false)close(null);});document.body.appendChild(ov);var inp=ov.querySelector('input,textarea');if(inp)setTimeout(function(){inp.focus();},100);});}
+function showConfirm(m,ok){return showModal({title:'確認',message:m,okText:ok||'確定'});}
+function showPrompt(t,dv,ph){return showModal({title:t,html:'<input type="text" value="'+esc(dv||'')+'" placeholder="'+esc(ph||'')+'">'});}
+function showAlert(m){return showModal({title:'提示',message:m,cancel:false});}
+
+/* === DARK MODE === */
+if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){document.documentElement.classList.toggle('dark',e.matches);});
+
+/* === FIREBASE === */
+function connectFirebase(){var raw=document.getElementById('firebase-config-input').value.trim(),err=document.getElementById('setup-err');err.textContent='';if(!raw){err.textContent='請輸入 Firebase 設定';return;}var cfg;try{cfg=JSON.parse(raw);}catch(e){err.textContent='JSON 格式錯誤';return;}if(!cfg.projectId){err.textContent='缺少 projectId';return;}try{state.fb.app=firebase.initializeApp(cfg);state.fb.db=firebase.firestore();state.fb.storage=firebase.storage();state.fb.ready=true;_save('fbConfig',cfg);enterApp();}catch(e){err.textContent='連接失敗：'+e.message;}}
+function skipSetup(){state.fb.ready=false;enterApp();}
+function tryAutoConnect(){var cfg=_load('fbConfig',null);if(cfg&&cfg.projectId){try{state.fb.app=firebase.initializeApp(cfg);state.fb.db=firebase.firestore();state.fb.storage=firebase.storage();state.fb.ready=true;return true;}catch(e){return false;}}return false;}
+
+/* === DATA OPS === */
+function loadAllData(){
+  if(!state.fb.ready){
+    ALL_SECTIONS.forEach(function(k){state.data[k]=_load('data_'+k,[]);});
+    state.config=_load('config',{levels:{herbs:[],formulas:[],acupoints:[],theories:[]}});
+    if(!state.config.levels)state.config.levels={};
+    ALL_SECTIONS.forEach(function(k){if(!state.config.levels[k])state.config.levels[k]=[];});
+    return Promise.resolve();
+  }
+  return Promise.all(ALL_SECTIONS.map(function(k){
+    return state.fb.db.collection(k).get().then(function(snap){
+      state.data[k]=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    });
+  })).then(function(){
+    return state.fb.db.collection('appConfig').doc('main').get().then(function(doc){
+      if(doc.exists)state.config=Object.assign({},state.config,doc.data());
+      if(!state.config.levels)state.config.levels={};
+      ALL_SECTIONS.forEach(function(k){if(!state.config.levels[k])state.config.levels[k]=[];});
+    });
+  }).catch(function(e){toast('載入失敗：'+e.message,'error');});
+}
+function saveLocal(s){_save('data_'+s,state.data[s]);}
+function saveConfig(){_save('config',state.config);if(state.fb.ready)state.fb.db.collection('appConfig').doc('main').set(state.config).catch(function(){});}
+function saveItem(sec,item){
+  var now=Date.now();
+  if(!item.id){item.id=uid();item.createdAt=now;item.updatedAt=now;if(!item.srs)item.srs={interval:0,repetition:0,efactor:2.5,nextReview:0,lastReview:0};state.data[sec].push(item);}
+  else{item.updatedAt=now;var idx=state.data[sec].findIndex(function(x){return x.id===item.id;});if(idx>=0)state.data[sec][idx]=Object.assign({},state.data[sec][idx],item);}
+  saveLocal(sec);
+  if(state.fb.ready){var d=Object.assign({},item);var id=d.id;delete d.id;return state.fb.db.collection(sec).doc(id).set(d,{merge:true}).catch(function(e){toast('儲存失敗','error');});}
+  return Promise.resolve();
+}
+function deleteItemData(sec,id){
+  state.data[sec]=state.data[sec].filter(function(x){return x.id!==id;});saveLocal(sec);
+  if(state.fb.ready)return state.fb.db.collection(sec).doc(id).delete().then(function(){return state.fb.storage.ref('images/'+sec+'/'+id).listAll().then(function(l){return Promise.all(l.items.map(function(r){return r.delete();}));}).catch(function(){});}).catch(function(e){toast('刪除失敗','error');});
+  return Promise.resolve();
+}
+function uploadImage(sec,itemId,file){
+  if(state.fb.ready){var fn=Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');var ref=state.fb.storage.ref('images/'+sec+'/'+itemId+'/'+fn);return ref.put(file).then(function(){return ref.getDownloadURL();});}
+  return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=function(){rej(new Error('讀取失敗'));};r.readAsDataURL(file);});
+}
+function deleteImageFile(sec,itemId,url){if(state.fb.ready&&url.indexOf('firebasestorage')!==-1)return state.fb.storage.refFromURL(url).delete().catch(function(){});return Promise.resolve();}
+
+/* === HELPERS === */
+function getLevels(s){return(state.config.levels&&state.config.levels[s])||[];}
+function setLevels(s,a){if(!state.config.levels)state.config.levels={};state.config.levels[s]=a;saveConfig();}
+function getCategories(s){var sec=SECTIONS[s],cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});if(sec.defaultCategories)sec.defaultCategories.forEach(function(c){cats.add(c);});return Array.from(cats);}
+function getUsedCategories(s){var pool=getFilteredItems(s,true),cats=new Set();pool.forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
+function getFilteredItems(sec,ignoreCat){
+  var f=state.filter[sec],items=state.data[sec]||[];
+  if(f.level)items=items.filter(function(i){return i.level===f.level;});
+  if(!ignoreCat&&f.category)items=items.filter(function(i){return i.category===f.category;});
+  if(f.search){var q=f.search.toLowerCase();var sd=SECTIONS[sec];items=items.filter(function(i){
+    var match=sd.fields.some(function(fd){if(fd.type==='herb-list'||fd.type==='formula-tags')return false;var v=i[fd.key];return v&&String(v).toLowerCase().indexOf(q)!==-1;});
+    if(!match&&i.category)match=i.category.toLowerCase().indexOf(q)!==-1;
+    if(!match&&sec==='formulas'&&i.composition)match=i.composition.some(function(c){return c.name&&c.name.toLowerCase().indexOf(q)!==-1;});
+    if(!match&&sec==='herbs'&&i.relatedFormulas)match=i.relatedFormulas.some(function(rf){return rf.toLowerCase().indexOf(q)!==-1;});
+    return match;
+  });}
+  return items;
+}
+function sm2(srs,q){var iv=(srs&&srs.interval)||0,rp=(srs&&srs.repetition)||0,ef=(srs&&srs.efactor)||2.5;if(q<3){rp=0;iv=1;}else{if(rp===0)iv=1;else if(rp===1)iv=6;else iv=Math.round(iv*ef);rp++;}ef=Math.max(1.3,ef+(0.1-(5-q)*(0.08+(5-q)*0.02)));return{interval:iv,repetition:rp,efactor:ef,nextReview:Date.now()+iv*86400000,lastReview:Date.now()};}
+function getDueCount(){var now=Date.now(),c=0;QUIZZABLE.forEach(function(s){state.data[s].forEach(function(i){if(i.srs&&i.srs.nextReview&&i.srs.nextReview<=now)c++;});});return c;}
+
+/* === NAV === */
+function enterApp(){document.getElementById('setup-screen').style.display='none';document.getElementById('app-main').classList.add('active');loadAllData().then(function(){switchTab('home');updateDueBadge();});}
+function switchTab(tab){
+  state.tab=tab;document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===tab);});
+  var secs=['herbs','formulas','acupoints','theories'];
+  if(secs.indexOf(tab)!==-1){state.section=tab;state.view='list';showView('list');renderSubHeader();renderList();showFab(true);}
+  else if(tab==='home'){state.section=null;state.view='home';showView('home');renderHome();hideSubHeader();showFab(false);}
+  else if(tab==='quiz'){state.section=null;state.view='quiz-setup';showView('quiz-setup');renderQuizSetup();hideSubHeader();showFab(false);}
+  closeSearch();
+}
+function showView(n){document.querySelectorAll('.content-area .view').forEach(function(v){v.classList.remove('active');});var el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
+function showFab(s){document.getElementById('fab').style.display=s?'flex':'none';}
+function toggleSearch(){var b=document.getElementById('search-bar'),btn=document.getElementById('btn-search');b.classList.toggle('open');btn.classList.toggle('active');if(b.classList.contains('open'))document.getElementById('search-input').focus();}
+function closeSearch(){document.getElementById('search-bar').classList.remove('open');document.getElementById('btn-search').classList.remove('active');}
+var onSearchD=debounce(function(v){if(state.section){state.filter[state.section].search=v;renderList();}},250);
+function hideSubHeader(){document.getElementById('sub-header').style.display='none';}
+function renderSubHeader(){
+  var sh=document.getElementById('sub-header');sh.style.display='';var sec=state.section;if(!sec){sh.style.display='none';return;}
+  var levels=getLevels(sec),lp=document.getElementById('level-pills');
+  if(!levels.length){lp.innerHTML='';lp.style.display='none';}
+  else{lp.style.display='';var f=state.filter[sec];lp.innerHTML='<div class="pill gold '+(f.level?'':'active')+'" data-level="">全部</div>'+levels.map(function(l){return'<div class="pill gold '+(f.level===l?'active':'')+'" data-level="'+esc(l)+'">'+esc(l)+'</div>';}).join('');}
+  var cats=getUsedCategories(sec),cp=document.getElementById('category-pills');
+  if(!cats.length){cp.innerHTML='';cp.style.display='none';}
+  else{cp.style.display='';var fc=state.filter[sec];cp.innerHTML='<div class="pill '+(fc.category?'':'active')+'" data-cat="">全部</div>'+cats.map(function(c){return'<div class="pill '+(fc.category===c?'active':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</div>';}).join('');}
+}
+function filterLevel(l){if(!state.section)return;state.filter[state.section].level=l||null;state.filter[state.section].category=null;renderSubHeader();renderList();}
+function filterCategory(c){if(!state.section)return;state.filter[state.section].category=c||null;renderSubHeader();renderList();}
+function updateDueBadge(){var c=getDueCount(),b=document.getElementById('due-badge');if(c>0){b.style.display='';b.textContent=c>99?'99+':c;}else b.style.display='none';}
+
+/* === HOME === */
+function renderHome(){
+  var el=document.getElementById('view-home'),hc=state.data.herbs.length,fc=state.data.formulas.length,ac=state.data.acupoints.length,tc=state.data.theories.length,due=getDueCount();
+  var all=state.data.herbs.concat(state.data.formulas,state.data.acupoints,state.data.theories);
+  all.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});var recent=all.slice(0,5);
+  var rh='';if(recent.length){rh='<div class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> 最近更新</div>';recent.forEach(function(it){var s=findSection(it),sd=SECTIONS[s],nm=it[sd.nameField]||'(無標題)';rh+='<div class="card" data-action="detail" data-sec="'+s+'" data-id="'+it.id+'"><div class="card-title"><i class="fa-solid '+sd.icon+'" style="font-size:0.83rem;color:var(--accent)"></i> '+esc(nm)+'</div><div class="card-meta"><span><i class="fa-solid fa-tag"></i> '+esc(it.category||'未分類')+'</span></div></div>';});}
+  el.innerHTML='<div class="home-greeting">🌿 學海無涯</div><div class="home-sub">勤學中醫，精益求精</div>'+
+    '<div class="stats-grid">'+
+    '<div class="stat-card"><div class="stat-num">'+hc+'</div><div class="stat-label">中藥</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+fc+'</div><div class="stat-label">藥方</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+ac+'</div><div class="stat-label">穴道</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-label">筆記</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+due+'</div><div class="stat-label">待複習</div></div></div>'+
+    '<div class="section-title"><i class="fa-solid fa-bolt"></i> 快速操作</div><div class="quick-actions">'+
+    '<div class="quick-btn" data-action="quick-add" data-sec="herbs"><i class="fa-solid fa-leaf"></i><span>新增中藥</span></div>'+
+    '<div class="quick-btn" data-action="quick-add" data-sec="formulas"><i class="fa-solid fa-mortar-pestle"></i><span>新增藥方</span></div>'+
+    '<div class="quick-btn" data-action="quick-add" data-sec="acupoints"><i class="fa-solid fa-crosshairs"></i><span>新增穴道</span></div>'+
+    '<div class="quick-btn" data-action="quick-quiz"><i class="fa-solid fa-brain"></i><span>開始測驗'+(due>0?' ('+due+')':'')+'</span></div></div>'+rh;
+}
+function findSection(item){for(var i=0;i<ALL_SECTIONS.length;i++){if(state.data[ALL_SECTIONS[i]].some(function(x){return x.id===item.id;}))return ALL_SECTIONS[i];}return'herbs';}
+
+/* === LIST === */
+function renderList(){
+  var sec=state.section;if(!sec)return;var el=document.getElementById('view-list'),items=getFilteredItems(sec,false),sd=SECTIONS[sec];
+  if(!items.length){var f=state.filter[sec];el.innerHTML='<div class="empty-state"><i class="fa-solid '+sd.icon+'"></i><p>'+(f.level||f.category||f.search?'沒有符合條件的項目':'尚未新增任何'+sd.name)+'</p></div>';return;}
+  items.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});
+  el.innerHTML=items.map(function(it){return renderCard(sec,it);}).join('');
+}
+function renderCard(sec,item){
+  var sd=SECTIONS[sec],nm=item[sd.nameField]||'(無標題)',preview='';
+  if(sec==='herbs')preview=item.functions||item.nature||'';
+  else if(sec==='formulas'){var cn=(item.composition||[]).map(function(c){return c.name;}).join('、');preview=cn||item.functions||'';}
+  else if(sec==='acupoints')preview=item.indications||item.location||'';
+  else if(sec==='theories')preview=item.content||'';
+  if(preview.length>80)preview=preview.slice(0,80)+'…';
+  var imgs='';if(item.images&&item.images.length){imgs='<div class="card-thumbs">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" alt="">';}).join('')+(item.images.length>4?'<span style="font-size:0.73rem;color:var(--text-2);align-self:center">+'+(item.images.length-4)+'</span>':'')+'</div>';}
+  var srs='';if(item.srs&&item.srs.nextReview&&item.srs.nextReview<=Date.now())srs='<span style="color:var(--danger)"><i class="fa-solid fa-clock"></i> 待複習</span>';
+  return'<div class="card" data-action="detail" data-sec="'+sec+'" data-id="'+item.id+'"><div class="card-title">'+esc(nm)+'</div><div class="card-sub">'+esc(item.category||'')+(item.level?' · '+esc(item.level):'')+'</div>'+(preview?'<div class="card-preview">'+esc(preview)+'</div>':'')+'<div class="card-meta">'+(item.images&&item.images.length?'<span><i class="fa-solid fa-image"></i> '+item.images.length+'</span>':'')+srs+'</div>'+imgs+'</div>';
+}
+
+/* === DETAIL === */
+function openDetail(sec,id){var item=state.data[sec].find(function(x){return x.id===id;});if(!item)return;state.section=sec;state.currentItem=item;state.view='detail';showView('detail');hideSubHeader();showFab(false);renderDetail();}
+function renderDetail(){
+  var el=document.getElementById('view-detail'),it=state.currentItem,sec=state.section,sd=SECTIONS[sec],nm=it[sd.nameField]||'(無標題)';
+  var fh='';sd.fields.forEach(function(fd){
+    if(fd.key===sd.nameField)return;var val=it[fd.key];
+    if(fd.key==='tags'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+val.split(',').map(function(t){return'<span class="badge badge-accent">'+esc(t.trim())+'</span>';}).join('')+'</div></div>';}
+    else if(fd.key==='content'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value" style="line-height:1.8">'+renderMD(val)+'</div></div>';}
+    else if(fd.type==='herb-list'){var comp=it.composition;if(comp&&comp.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="comp-list">'+comp.map(function(c){return'<div class="comp-chip"><span class="c-name">'+esc(c.name)+'</span>'+(c.dosage?'<span class="c-dose">'+esc(c.dosage)+'</span>':'')+'</div>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
+    else if(fd.type==='formula-tags'){var rf=it.relatedFormulas;if(rf&&rf.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+rf.map(function(f){return'<span class="badge badge-gold">'+esc(f)+'</span>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
+    else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value '+(val?'':'empty')+'">'+(val?esc(val):'未填寫')+'</div></div>';}
+  });
+  var ih='';if(it.images&&it.images.length){ih='<div class="detail-section"><div class="detail-label">圖片 ('+it.images.length+')</div><div class="img-gallery">'+it.images.map(function(u,i){return'<img src="'+esc(u)+'" alt="" data-action="lightbox" data-idx="'+i+'">';}).join('')+'</div></div>';}
+  var sh='';if(sec!=='theories'&&it.srs){var isDue=it.srs.nextReview&&it.srs.nextReview<=Date.now();var ns=it.srs.nextReview?new Date(it.srs.nextReview).toLocaleDateString('zh-TW'):'尚未學習';sh='<div class="detail-section"><div class="detail-label">複習進度</div><div class="detail-value">下次複習：'+ns+(isDue?' <span style="color:var(--danger);font-weight:700">（已到期）</span>':'')+'<br>已複習 '+(it.srs.repetition||0)+' 次 · 間隔 '+(it.srs.interval||0)+' 天</div></div>';}
+  el.innerHTML='<div class="detail-header"><button class="detail-back" data-action="back-list"><i class="fa-solid fa-chevron-left"></i></button><div class="detail-title">'+esc(nm)+'</div><div class="detail-actions"><button class="btn-edit" data-action="edit-item"><i class="fa-solid fa-pen"></i></button><button class="btn-del" data-action="delete-item"><i class="fa-solid fa-trash"></i></button></div></div><div class="detail-badges">'+(it.category?'<span class="badge badge-accent"><i class="fa-solid fa-tag"></i> '+esc(it.category)+'</span>':'')+(it.level?'<span class="badge badge-gold"><i class="fa-solid fa-layer-group"></i> '+esc(it.level)+'</span>':'')+'</div>'+fh+ih+sh;
+}
+function renderMD(t){try{if(typeof marked!=='undefined')return marked.parse(t,{breaks:true});}catch(e){}return esc(t).replace(/\n/g,'<br>');}
+function backToList(){state.currentItem=null;state.view='list';showView('list');renderSubHeader();renderList();showFab(true);}
+function editItem(){state.editing=true;state.view='form';showView('form');renderForm();}
+function confirmDeleteItem(){showConfirm('確定要刪除此項目嗎？','刪除').then(function(ok){if(!ok)return;var sec=state.section,id=state.currentItem.id,imgs=state.currentItem.images||[];var ch=Promise.resolve();imgs.forEach(function(u){ch=ch.then(function(){return deleteImageFile(sec,id,u);});});ch.then(function(){return deleteItemData(sec,id);}).then(function(){toast('已刪除','info');backToList();updateDueBadge();});});}
+
+/* === FORM === */
+function onFabClick(){if(!state.section)return;state.editing=false;state.currentItem=null;state.view='form';showView('form');hideSubHeader();showFab(false);renderForm();}
+function renderForm(){
+  var el=document.getElementById('view-form'),sec=state.section,sd=SECTIONS[sec],isEdit=state.editing&&state.currentItem,it=isEdit?state.currentItem:{};
+  state.formImages={existing:(it.images||[]).slice(),pending:[]};
+  state.formComposition=(it.composition||[]).map(function(c){return{name:c.name,dosage:c.dosage||''};});
+  state.formFormulaTags=(it.relatedFormulas||[]).slice();
+  var f=state.filter[sec],dLv=isEdit?(it.level||''):(f.level||''),dCat=isEdit?(it.category||''):(f.category||'');
+  var levels=getLevels(sec),cats=getCategories(sec);
+  var fhtml='';sd.fields.forEach(function(fd){
+    var val=isEdit?(it[fd.key]||''):'';
+    if(fd.type==='text'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+(fd.required?' *':'')+'</label><input type="text" id="f-'+fd.key+'" value="'+esc(val)+'" placeholder="'+esc(fd.placeholder||'')+'">'+(fd.key===sd.nameField?'<div class="dupe-warn" id="dupe-warn" style="display:none"></div>':'')+'</div>';}
+    else if(fd.type==='textarea'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
+    else if(fd.type==='textarea-lg'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" style="min-height:180px" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
+    else if(fd.type==='herb-list'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div id="herb-list-wrap">'+renderHerbListHTML()+'</div></div>';}
+    else if(fd.type==='formula-tags'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div id="formula-tags-wrap">'+renderFormulaTagsHTML()+'</div></div>';}
+  });
+  var lvSel=levels.length?'<div class="form-group"><label>級別</label><select id="f-level"><option value="">— 無 —</option>'+levels.map(function(l){return'<option value="'+esc(l)+'"'+(l===dLv?' selected':'')+'>'+esc(l)+'</option>';}).join('')+'</select></div>':'<input type="hidden" id="f-level" value="">';
+  var catOpts=cats.map(function(c){return'<option value="'+esc(c)+'">';}).join('');
+  var catSel='<div class="form-group"><label>'+esc(sd.categoryLabel)+'</label><input type="text" id="f-category" value="'+esc(dCat)+'" list="cat-list" placeholder="選擇或輸入新'+esc(sd.categoryLabel)+'"><datalist id="cat-list">'+catOpts+'</datalist></div>';
+  el.innerHTML='<div class="form-title"><button class="detail-back" data-action="cancel-form"><i class="fa-solid fa-chevron-left"></i></button>'+(isEdit?'編輯':'新增')+sd.name+'</div><div class="form-row">'+lvSel+catSel+'</div>'+fhtml+'<div class="form-group"><label>圖片</label><div class="img-previews" id="img-previews"></div><div class="img-upload-zone" id="img-upload-zone"><i class="fa-solid fa-cloud-arrow-up"></i><p>點擊或拖拽上傳圖片</p><input type="file" id="img-file-input" multiple accept="image/*" style="display:none"></div></div><div class="form-submit"><button class="btn-secondary" data-action="cancel-form">取消</button><button class="btn-primary" data-action="submit-form">儲存</button></div>';
+  setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();
+  var ni=document.getElementById('f-'+sd.nameField);if(ni){var exId=isEdit?it.id:null;var ck=debounce(function(){checkDupe(sec,sd.nameField,ni.value,exId);},300);ni.addEventListener('input',ck);}
+}
+function renderHerbListHTML(){
+  var h='<div class="herb-list-items" id="herb-list-items">'+state.formComposition.map(function(c,i){
+    return'<div class="herb-row"><span class="h-name">'+esc(c.name)+'</span><input type="text" placeholder="用量" value="'+esc(c.dosage)+'" data-herb-idx="'+i+'"><button data-action="rm-herb" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';
+  }).join('')+'</div><div class="tag-input-wrap"><input type="text" id="herb-search-input" placeholder="搜尋中藥名稱以新增…" autocomplete="off"><div class="ac-dropdown" id="herb-dropdown"></div></div>';
+  return h;
+}
+function renderFormulaTagsHTML(){
+  var h='<div class="tag-list" id="formula-tag-list">'+state.formFormulaTags.map(function(f,i){
+    return'<span class="tag-item">'+esc(f)+'<button data-action="rm-ftag" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></span>';
+  }).join('')+'</div><div class="tag-input-wrap"><input type="text" id="formula-search-input" placeholder="搜尋藥方名稱以新增…" autocomplete="off"><div class="ac-dropdown" id="formula-dropdown"></div></div>';
+  return h;
+}
+function refreshHerbList(){var w=document.getElementById('herb-list-wrap');if(w)w.innerHTML=renderHerbListHTML();setupHerbListEvents();}
+function refreshFormulaTags(){var w=document.getElementById('formula-tags-wrap');if(w)w.innerHTML=renderFormulaTagsHTML();setupFormulaTagsEvents();}
+
+function setupHerbListEvents(){
+  var inp=document.getElementById('herb-search-input');if(!inp)return;
+  inp.addEventListener('input',function(){
+    var v=inp.value.trim().toLowerCase(),dd=document.getElementById('herb-dropdown');
+    if(!v){dd.classList.remove('show');return;}
+    var existing=state.formComposition.map(function(c){return c.name.toLowerCase();});
+    var matches=state.data.herbs.filter(function(h){return(h.name&&h.name.toLowerCase().indexOf(v)!==-1||h.pinyin&&h.pinyin.toLowerCase().indexOf(v)!==-1)&&existing.indexOf(h.name.toLowerCase())===-1;}).slice(0,8);
+    if(!matches.length){dd.classList.remove('show');return;}
+    dd.innerHTML=matches.map(function(h){return'<div class="ac-item" data-action="add-herb" data-name="'+esc(h.name)+'">'+esc(h.name)+(h.pinyin?' <span class="ac-sub">'+esc(h.pinyin)+'</span>':'')+(h.nature?' <span class="ac-sub">'+esc(h.nature)+'</span>':'')+'</div>';}).join('');
+    dd.classList.add('show');
+  });
+  var items=document.getElementById('herb-list-items');if(items){items.addEventListener('input',function(e){if(e.target.dataset.herbIdx!==undefined){state.formComposition[parseInt(e.target.dataset.herbIdx,10)].dosage=e.target.value;}});}
+}
+function setupFormulaTagsEvents(){
+  var inp=document.getElementById('formula-search-input');if(!inp)return;
+  inp.addEventListener('input',function(){
+    var v=inp.value.trim().toLowerCase(),dd=document.getElementById('formula-dropdown');
+    if(!v){dd.classList.remove('show');return;}
+    var existing=state.formFormulaTags.map(function(f){return f.toLowerCase();});
+    var matches=state.data.formulas.filter(function(f){return f.name&&f.name.toLowerCase().indexOf(v)!==-1&&existing.indexOf(f.name.toLowerCase())===-1;}).slice(0,8);
+    if(!matches.length){
+      // allow free text entry
+      if(existing.indexOf(v)===-1){dd.innerHTML='<div class="ac-item" data-action="add-ftag" data-name="'+esc(inp.value.trim())+'"><i class="fa-solid fa-plus" style="margin-right:4px;font-size:0.7rem"></i> 新增「'+esc(inp.value.trim())+'」</div>';dd.classList.add('show');}
+      else dd.classList.remove('show');
+      return;
+    }
+    dd.innerHTML=matches.map(function(f){return'<div class="ac-item" data-action="add-ftag" data-name="'+esc(f.name)+'">'+esc(f.name)+(f.category?' <span class="ac-sub">'+esc(f.category)+'</span>':'')+'</div>';}).join('');
+    dd.classList.add('show');
+  });
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();var v=inp.value.trim();if(v&&state.formFormulaTags.indexOf(v)===-1){state.formFormulaTags.push(v);refreshFormulaTags();}}
+  });
+}
+
+function setupImageUpload(){var z=document.getElementById('img-upload-zone'),fi=document.getElementById('img-file-input');if(!z||!fi)return;z.addEventListener('click',function(e){if(e.target===fi)return;fi.click();});z.addEventListener('dragover',function(e){e.preventDefault();z.classList.add('dragover');});z.addEventListener('dragleave',function(){z.classList.remove('dragover');});z.addEventListener('drop',function(e){e.preventDefault();z.classList.remove('dragover');handleFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){handleFiles(fi.files);fi.value='';});}
+function handleFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('image/'))continue;state.formImages.pending.push({file:files[i],previewUrl:URL.createObjectURL(files[i]),uploading:false});}renderImagePreviews();}
+function renderImagePreviews(){var el=document.getElementById('img-previews');if(!el)return;var h='';state.formImages.existing.forEach(function(u,i){h+='<div class="img-preview"><img src="'+esc(u)+'" alt=""><button class="remove-img" data-action="rm-existing" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';});state.formImages.pending.forEach(function(p,i){h+='<div class="img-preview"><img src="'+p.previewUrl+'" alt="">'+(p.uploading?'<div class="upload-progress"><i class="fa-solid fa-spinner fa-spin"></i></div>':'')+'<button class="remove-img" data-action="rm-pending" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';});el.innerHTML=h;}
+function checkDupe(sec,field,val,exId){var w=document.getElementById('dupe-warn');if(!w)return;if(!val||!val.trim()){w.style.display='none';return;}var v=val.trim().toLowerCase();var d=state.data[sec].find(function(i){if(exId&&i.id===exId)return false;var iv=i[field];return iv&&iv.trim().toLowerCase()===v;});if(d){w.style.display='';w.innerHTML='<i class="fa-solid fa-triangle-exclamation"></i> 已存在相同名稱'+(d.category?'（'+esc(d.category)+'）':'');}else w.style.display='none';}
+
+function submitForm(){
+  var sec=state.section,sd=SECTIONS[sec],isEdit=state.editing&&state.currentItem,item=isEdit?Object.assign({},state.currentItem):{};
+  sd.fields.forEach(function(fd){
+    if(fd.type==='herb-list'){item.composition=state.formComposition.slice();}
+    else if(fd.type==='formula-tags'){item.relatedFormulas=state.formFormulaTags.slice();}
+    else{var el=document.getElementById('f-'+fd.key);if(el)item[fd.key]=el.value.trim();}
+  });
+  item.level=(document.getElementById('f-level')||{}).value||'';item.category=(document.getElementById('f-category')||{}).value||'';
+  var req=sd.fields.find(function(f){return f.required;});if(req&&!item[req.key]){showAlert('請填寫'+req.label);return;}
+  if(!item.id)item.id=uid();
+  var ups=[];var pc=state.formImages.pending.slice();var chain=Promise.resolve();
+  pc.forEach(function(p,i){chain=chain.then(function(){state.formImages.pending[i].uploading=true;renderImagePreviews();return uploadImage(sec,item.id,p.file).then(function(u){ups.push(u);state.formImages.pending[i].uploading=false;}).catch(function(e){toast('圖片上傳失敗','error');state.formImages.pending[i].uploading=false;});});});
+  chain.then(function(){
+    if(isEdit&&state.currentItem.images){var rm=state.currentItem.images.filter(function(u){return state.formImages.existing.indexOf(u)===-1;});var dc=Promise.resolve();rm.forEach(function(u){dc=dc.then(function(){return deleteImageFile(sec,item.id,u);});});return dc;}
+  }).then(function(){
+    item.images=state.formImages.existing.concat(ups);
+    state.formImages.pending.forEach(function(p){if(p.previewUrl)URL.revokeObjectURL(p.previewUrl);});
+    return saveItem(sec,item);
+  }).then(function(){
+    toast(isEdit?'已更新':'已新增','success');updateDueBadge();
+    state.currentItem=state.data[sec].find(function(x){return x.id===item.id;});state.editing=false;state.view='detail';showView('detail');renderDetail();
+  });
+}
+function cancelForm(){state.formImages.pending.forEach(function(p){if(p.previewUrl)URL.revokeObjectURL(p.previewUrl);});state.formImages={existing:[],pending:[]};if(state.editing&&state.currentItem){state.editing=false;state.view='detail';showView('detail');renderDetail();}else backToList();}
+
+/* === LIGHTBOX === */
+function openLightbox(imgs,idx){state.lightbox={images:imgs,idx:idx||0};document.getElementById('lightbox').classList.add('open');updLB();}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+function lbNav(d){var lb=state.lightbox;lb.idx=(lb.idx+d+lb.images.length)%lb.images.length;updLB();}
+function updLB(){var lb=state.lightbox;document.getElementById('lightbox-img').src=lb.images[lb.idx];document.getElementById('lightbox-counter').textContent=(lb.idx+1)+' / '+lb.images.length;}
+
+/* === QUIZ === */
+function renderQuizSetup(){
+  var el=document.getElementById('view-quiz-setup'),due=getDueCount();
+  el.innerHTML='<div class="quiz-setup"><div class="section-title" style="font-size:1.2rem;margin-bottom:18px"><i class="fa-solid fa-brain"></i> 測驗複習</div>'+(due>0?'<div style="background:var(--danger-light);padding:11px;border-radius:var(--radius-sm);margin-bottom:14px;font-size:0.86rem;color:var(--danger)"><i class="fa-solid fa-clock"></i> 目前有 <b>'+due+'</b> 個項目待複習</div>':'')+
+    '<div class="form-group"><label>科目</label><select id="q-section"><option value="herbs">中藥</option><option value="formulas">藥方</option><option value="acupoints">穴道</option></select></div>'+
+    '<div class="form-group"><label>級別</label><select id="q-level"><option value="">全部</option></select></div>'+
+    '<div class="form-group"><label>分類</label><select id="q-category"><option value="">全部</option></select></div>'+
+    '<div class="form-group"><label>模式</label><select id="q-mode"><option value="all">全部項目</option><option value="due"'+(due>0?' selected':'')+'>待複習</option><option value="new">未學習</option></select></div>'+
+    '<div class="form-group"><label>題數</label><select id="q-count"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="0">全部</option></select></div>'+
+    '<button class="btn-primary" data-action="start-quiz" style="width:100%;padding:13px;margin-top:6px"><i class="fa-solid fa-play"></i> 開始測驗</button></div>';
+  document.getElementById('q-section').addEventListener('change',updateQF);updateQF();
+}
+function updateQF(){var s=document.getElementById('q-section').value;document.getElementById('q-level').innerHTML='<option value="">全部</option>'+getLevels(s).map(function(l){return'<option value="'+esc(l)+'">'+esc(l)+'</option>';}).join('');document.getElementById('q-category').innerHTML='<option value="">全部</option>'+getUsedCategories(s).map(function(c){return'<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');}
+function startQuiz(){
+  var s=document.getElementById('q-section').value,lv=document.getElementById('q-level').value,cat=document.getElementById('q-category').value,mode=document.getElementById('q-mode').value,cnt=parseInt(document.getElementById('q-count').value,10);
+  var pool=state.data[s].slice();if(lv)pool=pool.filter(function(i){return i.level===lv;});if(cat)pool=pool.filter(function(i){return i.category===cat;});
+  var now=Date.now();if(mode==='due')pool=pool.filter(function(i){return i.srs&&i.srs.nextReview&&i.srs.nextReview<=now;});else if(mode==='new')pool=pool.filter(function(i){return!i.srs||!i.srs.lastReview;});
+  if(!pool.length){showAlert('沒有符合條件的項目');return;}
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t;}
+  if(cnt>0&&pool.length>cnt)pool=pool.slice(0,cnt);
+  state.quiz={active:true,section:s,cards:pool,idx:0,flipped:false,results:[]};state.view='quiz-play';showView('quiz-play');renderQC();
+}
+function renderQC(){
+  var el=document.getElementById('view-quiz-play'),q=state.quiz,sd=SECTIONS[q.section],item=q.cards[q.idx],prog=(q.idx/q.cards.length*100).toFixed(0);
+  var bf=sd.quizBack(item),bi='';if(item.images&&item.images.length)bi='<div class="img-gallery" style="margin-top:10px">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" style="max-height:70px;width:auto;aspect-ratio:auto" alt="">';}).join('')+'</div>';
+  var rt=q.flipped?'<div class="quiz-rating"><button class="rate-again" data-action="rate" data-q="1"><span style="font-size:1.1rem">😟</span>重來</button><button class="rate-hard" data-action="rate" data-q="3"><span style="font-size:1.1rem">😐</span>困難</button><button class="rate-good" data-action="rate" data-q="4"><span style="font-size:1.1rem">😊</span>良好</button><button class="rate-easy" data-action="rate" data-q="5"><span style="font-size:1.1rem">🌟</span>容易</button></div>':'';
+  el.innerHTML='<div class="quiz-card-wrap"><div class="quiz-progress"><span>'+(q.idx+1)+' / '+q.cards.length+'</span><div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:'+prog+'%"></div></div><button style="background:transparent;border:none;color:var(--text-2);cursor:pointer;font-size:0.83rem" data-action="quit-quiz">結束</button></div><div class="quiz-card '+(q.flipped?'flipped':'')+'" data-action="flip-card"><div class="quiz-face quiz-front"><div class="q-name">'+esc(sd.quizFront(item))+'</div><div class="q-hint">'+esc(sd.quizHint(item))+'</div><div class="q-tap">點擊翻轉</div></div><div class="quiz-face quiz-back">'+bf.map(function(f){return'<div class="q-field"><div class="q-field-label">'+esc(f.label)+'</div><div class="q-field-value">'+esc(f.value)+'</div></div>';}).join('')+bi+'</div></div>'+rt+'</div>';
+}
+function flipQC(){if(state.quiz.flipped)return;state.quiz.flipped=true;renderQC();}
+function rateQuiz(q){var qz=state.quiz,item=qz.cards[qz.idx];item.srs=sm2(item.srs,q);qz.results.push({item:item,quality:q});saveItem(qz.section,{id:item.id,srs:item.srs}).then(function(){qz.idx++;qz.flipped=false;if(qz.idx>=qz.cards.length)finishQuiz();else renderQC();});}
+function finishQuiz(){state.quiz.active=false;state.view='quiz-results';showView('quiz-results');renderQR();updateDueBadge();}
+function renderQR(){var el=document.getElementById('view-quiz-results'),q=state.quiz,tot=q.results.length,good=q.results.filter(function(r){return r.quality>=3;}).length,pct=tot?Math.round(good/tot*100):0,bd={1:0,3:0,4:0,5:0};q.results.forEach(function(r){bd[r.quality]=(bd[r.quality]||0)+1;});el.innerHTML='<div class="quiz-results"><div class="section-title" style="font-size:1.15rem;justify-content:center"><i class="fa-solid fa-flag-checkered"></i> 測驗完成</div><div class="result-score">'+pct+'%</div><div style="font-size:0.88rem;color:var(--text-1);margin-bottom:18px">共 '+tot+' 題<br>😟 重來：'+(bd[1]||0)+' ｜ 😐 困難：'+(bd[3]||0)+' ｜ 😊 良好：'+(bd[4]||0)+' ｜ 🌟 容易：'+(bd[5]||0)+'</div><button class="btn-primary" data-action="quiz-again" style="width:100%;padding:13px"><i class="fa-solid fa-rotate-left"></i> 再測一次</button><button class="btn-secondary" data-action="quiz-home" style="width:100%;padding:13px;margin-top:7px;border:1.5px solid var(--border)">回首頁</button></div>';}
+
+/* === SETTINGS === */
+function showSettings(){state.view='settings';showView('settings');hideSubHeader();showFab(false);document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});renderSettings();}
+function renderSettings(){
+  var el=document.getElementById('view-settings'),fbs=state.fb.ready?'<span style="color:var(--accent)"><i class="fa-solid fa-circle-check"></i> 已連接</span>':'<span style="color:var(--text-2)"><i class="fa-solid fa-circle-xmark"></i> 本機模式</span>';
+  var ls='';ALL_SECTIONS.forEach(function(sec){var sd=SECTIONS[sec],lvs=getLevels(sec);var items='';lvs.forEach(function(lv,i){items+='<div class="lm-item"><span>'+esc(lv)+'</span><button data-action="mv-level" data-sec="'+sec+'" data-idx="'+i+'" data-dir="-1"><i class="fa-solid fa-chevron-up"></i></button><button data-action="mv-level" data-sec="'+sec+'" data-idx="'+i+'" data-dir="1"><i class="fa-solid fa-chevron-down"></i></button><button data-action="rename-level" data-sec="'+sec+'" data-lv="'+esc(lv)+'"><i class="fa-solid fa-pen"></i></button><button data-action="del-level" data-sec="'+sec+'" data-lv="'+esc(lv)+'" style="color:var(--danger)"><i class="fa-solid fa-trash"></i></button></div>';});if(!lvs.length)items='<div style="font-size:0.83rem;color:var(--text-2);padding:7px">尚未新增</div>';ls+='<div class="settings-section"><h3><i class="fa-solid '+sd.icon+'"></i> '+sd.name+' 級別</h3><div>'+items+'</div><button class="btn-secondary" data-action="add-level" data-sec="'+sec+'" style="width:100%;margin-top:7px;padding:7px;border:1.5px solid var(--border)"><i class="fa-solid fa-plus"></i> 新增級別</button></div>';});
+  el.innerHTML='<div class="detail-header" style="margin-bottom:14px"><button class="detail-back" data-action="settings-back"><i class="fa-solid fa-chevron-left"></i></button><div class="detail-title">設定</div></div><div class="settings-section"><h3><i class="fa-solid fa-database"></i> Firebase</h3><div class="settings-item"><span>狀態</span>'+fbs+'</div><div class="settings-item"><span>重新設定</span><button data-action="reset-fb">變更連接</button></div></div>'+ls+'<div class="settings-section"><h3><i class="fa-solid fa-download"></i> 資料管理</h3><div class="settings-item"><span>匯出資料</span><button data-action="export">匯出 JSON</button></div><div class="settings-item"><span>匯入資料</span><button data-action="import">匯入 JSON</button></div><div class="settings-item"><span>清除所有資料</span><button data-action="clear-all" style="color:var(--danger);border-color:var(--danger)">清除</button></div></div>';
+}
+function addLevel(s){showPrompt('新增級別','','級別名稱').then(function(n){if(!n||!n.trim())return;var lvs=getLevels(s);if(lvs.indexOf(n.trim())!==-1){toast('已存在','error');return;}lvs.push(n.trim());setLevels(s,lvs);renderSettings();toast('已新增','success');});}
+function renameLevel(s,old){showPrompt('重命名級別',old,'新名稱').then(function(nn){if(!nn||!nn.trim()||nn.trim()===old)return;var lvs=getLevels(s),idx=lvs.indexOf(old);if(idx<0)return;var t=nn.trim();lvs[idx]=t;setLevels(s,lvs);state.data[s].forEach(function(i){if(i.level===old)i.level=t;});saveLocal(s);if(state.fb.ready){var b=state.fb.db.batch();state.data[s].forEach(function(i){if(i.level===t)b.update(state.fb.db.collection(s).doc(i.id),{level:t});});b.commit().catch(function(){});}renderSettings();toast('已重命名','success');});}
+function deleteLevel(s,name){var cnt=state.data[s].filter(function(i){return i.level===name;}).length;showConfirm('確定刪除「'+name+'」？'+(cnt?'\n該級別下有 '+cnt+' 個項目。':'')).then(function(ok){if(!ok)return;setLevels(s,getLevels(s).filter(function(l){return l!==name;}));state.data[s].forEach(function(i){if(i.level===name)i.level='';});saveLocal(s);renderSettings();toast('已刪除','info');});}
+function moveLvl(s,idx,dir){var lvs=getLevels(s),ni=idx+dir;if(ni<0||ni>=lvs.length)return;var t=lvs[idx];lvs[idx]=lvs[ni];lvs[ni]=t;setLevels(s,lvs);renderSettings();}
+function resetFB(){showConfirm('確定要重新設定連接？').then(function(ok){if(!ok)return;_save('fbConfig',null);state.fb={app:null,db:null,storage:null,ready:false};document.getElementById('setup-screen').style.display='';document.getElementById('app-main').classList.remove('active');});}
+function exportData(){var d={herbs:state.data.herbs,formulas:state.data.formulas,acupoints:state.data.acupoints,theories:state.data.theories,config:state.config,exportedAt:new Date().toISOString()};var b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='岐黃學堂_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('已匯出','success');}
+function importData(){var inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=function(){var f=inp.files[0];if(!f)return;f.text().then(function(t){var d=JSON.parse(t);return showConfirm('確定匯入？將覆蓋現有資料。','匯入').then(function(ok){if(!ok)return;ALL_SECTIONS.forEach(function(k){if(d[k])state.data[k]=d[k];saveLocal(k);});if(d.config)state.config=Object.assign({},state.config,d.config);saveConfig();});}).then(function(){toast('匯入完成','success');switchTab('home');}).catch(function(e){toast('匯入失敗：'+e.message,'error');});};inp.click();}
+function clearAll(){showConfirm('確定清除所有資料？無法復原！','清除').then(function(ok){if(!ok)return;return showConfirm('再次確認：所有資料將永久刪除。','確定清除').then(function(ok2){if(!ok2)return;state.data={herbs:[],formulas:[],acupoints:[],theories:[]};ALL_SECTIONS.forEach(function(k){saveLocal(k);});toast('已清除','info');switchTab('home');});});}
+
+/* === EVENTS === */
+document.addEventListener('click',function(e){
+  // close autocomplete dropdowns on outside click
+  var dd1=document.getElementById('herb-dropdown'),dd2=document.getElementById('formula-dropdown');
+  if(dd1&&!e.target.closest('#herb-list-wrap'))dd1.classList.remove('show');
+  if(dd2&&!e.target.closest('#formula-tags-wrap'))dd2.classList.remove('show');
+
+  var tgt=e.target.closest('[data-action]');if(!tgt)return;var act=tgt.dataset.action;
+  switch(act){
+    case 'detail':openDetail(tgt.dataset.sec,tgt.dataset.id);break;
+    case 'quick-add':switchTab(tgt.dataset.sec);setTimeout(onFabClick,100);break;
+    case 'quick-quiz':switchTab('quiz');break;
+    case 'back-list':backToList();break;
+    case 'edit-item':editItem();break;
+    case 'delete-item':confirmDeleteItem();break;
+    case 'cancel-form':cancelForm();break;
+    case 'submit-form':submitForm();break;
+    case 'rm-existing':state.formImages.existing.splice(parseInt(tgt.dataset.idx,10),1);renderImagePreviews();break;
+    case 'rm-pending':var pi=parseInt(tgt.dataset.idx,10);var p=state.formImages.pending[pi];if(p&&p.previewUrl)URL.revokeObjectURL(p.previewUrl);state.formImages.pending.splice(pi,1);renderImagePreviews();break;
+    case 'lightbox':if(state.currentItem&&state.currentItem.images)openLightbox(state.currentItem.images,parseInt(tgt.dataset.idx,10));break;
+    case 'start-quiz':startQuiz();break;
+    case 'flip-card':flipQC();break;
+    case 'rate':rateQuiz(parseInt(tgt.dataset.q,10));break;
+    case 'quit-quiz':if(state.quiz.results.length)finishQuiz();else switchTab('quiz');break;
+    case 'quiz-again':switchTab('quiz');break;
+    case 'quiz-home':switchTab('home');break;
+    case 'settings-back':switchTab(state.tab==='settings'?'home':(state.tab||'home'));break;
+    case 'reset-fb':resetFB();break;
+    case 'add-level':addLevel(tgt.dataset.sec);break;
+    case 'rename-level':renameLevel(tgt.dataset.sec,tgt.dataset.lv);break;
+    case 'del-level':deleteLevel(tgt.dataset.sec,tgt.dataset.lv);break;
+    case 'mv-level':moveLvl(tgt.dataset.sec,parseInt(tgt.dataset.idx,10),parseInt(tgt.dataset.dir,10));break;
+    case 'export':exportData();break;
+    case 'import':importData();break;
+    case 'clear-all':clearAll();break;
+    case 'rm-herb':state.formComposition.splice(parseInt(tgt.dataset.idx,10),1);refreshHerbList();break;
+    case 'add-herb':state.formComposition.push({name:tgt.dataset.name,dosage:''});refreshHerbList();break;
+    case 'rm-ftag':state.formFormulaTags.splice(parseInt(tgt.dataset.idx,10),1);refreshFormulaTags();break;
+    case 'add-ftag':if(tgt.dataset.name&&state.formFormulaTags.indexOf(tgt.dataset.name)===-1){state.formFormulaTags.push(tgt.dataset.name);refreshFormulaTags();}break;
+  }
+});
+document.getElementById('level-pills').addEventListener('click',function(e){var p=e.target.closest('.pill');if(p)filterLevel(p.dataset.level||null);});
+document.getElementById('category-pills').addEventListener('click',function(e){var p=e.target.closest('.pill');if(p)filterCategory(p.dataset.cat||null);});
+document.getElementById('bottom-nav').addEventListener('click',function(e){var b=e.target.closest('.nav-btn');if(b&&b.dataset.tab)switchTab(b.dataset.tab);});
+document.getElementById('logo-home').addEventListener('click',function(){switchTab('home');});
+document.getElementById('btn-search').addEventListener('click',toggleSearch);
+document.getElementById('btn-settings').addEventListener('click',showSettings);
+document.getElementById('search-input').addEventListener('input',function(){onSearchD(this.value);});
+document.getElementById('fab').addEventListener('click',onFabClick);
+document.getElementById('btn-skip-setup').addEventListener('click',skipSetup);
+document.getElementById('btn-connect-fb').addEventListener('click',connectFirebase);
+document.getElementById('lb-close').addEventListener('click',closeLightbox);
+document.getElementById('lb-prev').addEventListener('click',function(){lbNav(-1);});
+document.getElementById('lb-next').addEventListener('click',function(){lbNav(1);});
+document.addEventListener('keydown',function(e){if(document.getElementById('lightbox').classList.contains('open')){if(e.key==='Escape')closeLightbox();else if(e.key==='ArrowLeft')lbNav(-1);else if(e.key==='ArrowRight')lbNav(1);}});
+(function(){var sx=0,lb=document.getElementById('lightbox');lb.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});lb.addEventListener('touchend',function(e){var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50)lbNav(d<0?1:-1);},{passive:true});})();
+
+/* === INIT === */
+if(tryAutoConnect())enterApp();
+})();
+</script>
+</body>
+</html>
