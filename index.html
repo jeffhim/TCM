@@ -329,34 +329,7 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
   <div class="setup-box">
     <div class="setup-logo">🌿 岐黃學堂</div>
     <div class="setup-sub">中醫學習助手</div>
-    <label>Firebase 設定（JSON 格式）</label>
-    <textarea id="firebase-config-input" placeholder='{
-  "apiKey": "...",
-  "authDomain": "...",
-  "projectId": "...",
-  "storageBucket": "...",
-  "messagingSenderId": "...",
-  "appId": "..."
-}'></textarea>
-    <div class="setup-hint">
-      請至 Firebase Console &rarr; 專案設定 &rarr; 一般 &rarr; 您的應用程式，<br>
-      複製 <code>firebaseConfig</code> 物件並貼上。
-    </div>
-    <div class="setup-err" id="setup-err"></div>
-    <div class="setup-btns">
-      <button class="btn-secondary" id="btn-skip-setup">略過（本機模式）</button>
-      <button class="btn-primary" id="btn-connect-fb">連接 Firebase</button>
-    </div>
-    <!-- Auth step (hidden until Firebase connected) -->
-    <div id="auth-step" style="display:none">
-      <div style="border-top:1px solid var(--border);margin:20px 0 16px;"></div>
-      <div style="font-weight:700;font-size:0.95rem;margin-bottom:10px">🔐 登入帳號</div>
-      <button id="btn-google-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition)">
-        <i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入
-      </button>
-      <div id="auth-err" style="color:var(--danger);font-size:0.83rem;margin-top:8px;min-height:1.2em"></div>
-      <div id="auth-user" style="display:none;margin-top:10px;font-size:0.88rem;color:var(--accent);font-weight:600"></div>
-    </div>
+    <div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>連接中…</div>
   </div>
 </div>
 
@@ -522,60 +495,51 @@ if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){document.documentElement.classList.toggle('dark',e.matches);});
 
 /* === FIREBASE + AUTH === */
+var FIREBASE_CONFIG={apiKey:"AIzaSyB1DZpKEGGuLYt7-S79yiWL8EQ-XUq606w",authDomain:"tcm-app-6846f.firebaseapp.com",projectId:"tcm-app-6846f",storageBucket:"tcm-app-6846f.firebasestorage.app",messagingSenderId:"491924973084",appId:"1:491924973084:web:2c5a04552e4e8a4eab61d9"};
+
 function initFirebaseServices(cfg){
   state.fb.app=firebase.initializeApp(cfg);
   state.fb.db=firebase.firestore();
   state.fb.auth=firebase.auth();
   state.fb.ready=true;
 }
-function connectFirebase(){
-  var raw=document.getElementById('firebase-config-input').value.trim(),err=document.getElementById('setup-err');
-  err.textContent='';if(!raw){err.textContent='請輸入 Firebase 設定';return;}
-  var cfg;try{cfg=JSON.parse(raw);}catch(e){err.textContent='JSON 格式錯誤';return;}
-  if(!cfg.projectId){err.textContent='缺少 projectId';return;}
-  try{initFirebaseServices(cfg);_save('fbConfig',cfg);showAuthStep();}catch(e){err.textContent='連接失敗：'+e.message;}
-}
-function showAuthStep(){
-  document.getElementById('auth-step').style.display='block';
-  document.getElementById('firebase-config-input').disabled=true;
-  document.getElementById('btn-connect-fb').disabled=true;
-  document.getElementById('btn-skip-setup').style.display='none';
-  // check if already signed in
-  var user=state.fb.auth.currentUser;
-  if(user){onAuthSuccess(user);}
-}
 function googleSignIn(){
-  var err=document.getElementById('auth-err');err.textContent='';
   var provider=new firebase.auth.GoogleAuthProvider();
-  state.fb.auth.signInWithPopup(provider).then(function(result){
-    onAuthSuccess(result.user);
-  }).catch(function(e){
-    err.textContent='登入失敗：'+e.message;
+  provider.setCustomParameters({prompt:'select_account'});
+  return state.fb.auth.signInWithPopup(provider).then(function(result){
+    state.fb.user=result.user;
+    return true;
+  }).catch(function(){
+    return false;
   });
 }
-function onAuthSuccess(user){
-  var authUser=document.getElementById('auth-user');
-  authUser.style.display='block';
-  authUser.innerHTML='<i class="fa-solid fa-circle-check"></i> 已登入：'+esc(user.email);
-  document.getElementById('btn-google-signin').style.display='none';
-  state.fb.user=user;
-  setTimeout(function(){enterApp();},600);
-}
-function skipSetup(){state.fb.ready=false;enterApp();}
-function tryAutoConnect(){
-  var cfg=_load('fbConfig',null);
-  if(cfg&&cfg.projectId){
-    try{initFirebaseServices(cfg);
-      // listen for auth state
-      return new Promise(function(resolve){
-        state.fb.auth.onAuthStateChanged(function(user){
-          if(user){state.fb.user=user;resolve(true);}
-          else{resolve(false);}
-        });
-      });
-    }catch(e){return Promise.resolve(false);}
+function autoInit(){
+  // Show a loading message on setup screen
+  var box=document.querySelector('.setup-box');
+  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>連接中…</div>';
+  try{initFirebaseServices(FIREBASE_CONFIG);}catch(e){
+    if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--danger);font-size:0.9rem">連接失敗：'+esc(e.message)+'</div>';
+    return;
   }
-  return Promise.resolve(false);
+  // Check if already signed in
+  state.fb.auth.onAuthStateChanged(function(user){
+    if(user){
+      state.fb.user=user;
+      enterApp();
+    }else{
+      // Auto-trigger Google sign-in
+      if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>正在登入 Google…</div>';
+      googleSignIn().then(function(ok){
+        if(ok){enterApp();}
+        else{
+          // Sign-in failed or user cancelled — show retry button
+          if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px"><div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
+          var rb=document.getElementById('btn-retry-signin');
+          if(rb)rb.addEventListener('click',function(){autoInit();});
+        }
+      });
+    }
+  });
 }
 
 /* === DATA OPS === */
@@ -899,7 +863,7 @@ function renameLevel(s,old){showPrompt('重命名級別',old,'新名稱').then(f
 function deleteLevel(s,name){var cnt=state.data[s].filter(function(i){return i.level===name;}).length;showConfirm('確定刪除「'+name+'」？'+(cnt?'\n該級別下有 '+cnt+' 個項目。':'')).then(function(ok){if(!ok)return;setLevels(s,getLevels(s).filter(function(l){return l!==name;}));state.data[s].forEach(function(i){if(i.level===name)i.level='';});saveLocal(s);renderSettings();toast('已刪除','info');});}
 function moveLvl(s,idx,dir){var lvs=getLevels(s),ni=idx+dir;if(ni<0||ni>=lvs.length)return;var t=lvs[idx];lvs[idx]=lvs[ni];lvs[ni]=t;setLevels(s,lvs);renderSettings();}
 function signOut(){showConfirm('確定要登出帳號？').then(function(ok){if(!ok)return;if(state.fb.auth){state.fb.auth.signOut().then(function(){state.fb.user=null;toast('已登出','info');renderSettings();}).catch(function(e){toast('登出失敗：'+e.message,'error');});}});}
-function resetFB(){showConfirm('確定要重新設定連接？').then(function(ok){if(!ok)return;var authPromise=state.fb.auth?state.fb.auth.signOut():Promise.resolve();authPromise.catch(function(){}).then(function(){_save('fbConfig',null);state.fb={app:null,db:null,ready:false};document.getElementById('setup-screen').style.display='';document.getElementById('app-main').classList.remove('active');var as=document.getElementById('auth-step');if(as)as.style.display='none';var si=document.getElementById('btn-google-signin');if(si)si.style.display='';var au=document.getElementById('auth-user');if(au){au.style.display='none';au.innerHTML='';}var ae=document.getElementById('auth-err');if(ae)ae.textContent='';var ci=document.getElementById('firebase-config-input');if(ci){ci.disabled=false;ci.value='';}var cb=document.getElementById('btn-connect-fb');if(cb)cb.disabled=false;var ss=document.getElementById('btn-skip-setup');if(ss)ss.style.display='';});});}
+function resetFB(){showConfirm('確定要登出並重新連接？').then(function(ok){if(!ok)return;var authPromise=state.fb.auth?state.fb.auth.signOut():Promise.resolve();authPromise.catch(function(){}).then(function(){state.fb={app:null,db:null,ready:false};document.getElementById('setup-screen').style.display='';document.getElementById('app-main').classList.remove('active');autoInit();});});}
 function exportData(){var d={herbs:state.data.herbs,formulas:state.data.formulas,acupoints:state.data.acupoints,theories:state.data.theories,config:state.config,exportedAt:new Date().toISOString()};var b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='岐黃學堂_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('已匯出','success');}
 function importData(){var inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=function(){var f=inp.files[0];if(!f)return;f.text().then(function(t){var d=JSON.parse(t);return showConfirm('確定匯入？將覆蓋現有資料。','匯入').then(function(ok){if(!ok)return;ALL_SECTIONS.forEach(function(k){if(d[k])state.data[k]=d[k];saveLocal(k);});if(d.config)state.config=Object.assign({},state.config,d.config);saveConfig();});}).then(function(){toast('匯入完成','success');switchTab('home');}).catch(function(e){toast('匯入失敗：'+e.message,'error');});};inp.click();}
 function clearAll(){showConfirm('確定清除所有資料？無法復原！','清除').then(function(ok){if(!ok)return;return showConfirm('再次確認：所有資料將永久刪除。','確定清除').then(function(ok2){if(!ok2)return;state.data={herbs:[],formulas:[],acupoints:[],theories:[]};ALL_SECTIONS.forEach(function(k){saveLocal(k);});toast('已清除','info');switchTab('home');});});}
@@ -954,8 +918,6 @@ document.getElementById('btn-search').addEventListener('click',toggleSearch);
 document.getElementById('btn-settings').addEventListener('click',showSettings);
 document.getElementById('search-input').addEventListener('input',function(){onSearchD(this.value);});
 document.getElementById('fab').addEventListener('click',onFabClick);
-document.getElementById('btn-skip-setup').addEventListener('click',skipSetup);
-document.getElementById('btn-connect-fb').addEventListener('click',connectFirebase);
 document.getElementById('lb-close').addEventListener('click',closeLightbox);
 document.getElementById('lb-prev').addEventListener('click',function(){lbNav(-1);});
 document.getElementById('lb-next').addEventListener('click',function(){lbNav(1);});
@@ -1000,8 +962,7 @@ document.addEventListener('keydown',function(e){if(document.getElementById('ligh
 })();
 
 /* === INIT === */
-document.getElementById('btn-google-signin').addEventListener('click',googleSignIn);
-tryAutoConnect().then(function(ok){if(ok)enterApp();else if(state.fb.ready)showAuthStep();});
+autoInit();
 })();
 </script>
 </body>
