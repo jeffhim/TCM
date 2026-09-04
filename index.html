@@ -503,42 +503,49 @@ function initFirebaseServices(cfg){
   state.fb.auth=firebase.auth();
   state.fb.ready=true;
 }
-function googleSignIn(){
+function triggerGoogleSignIn(){
   var provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  return state.fb.auth.signInWithPopup(provider).then(function(result){
-    state.fb.user=result.user;
-    return true;
-  }).catch(function(){
-    return false;
-  });
+  state.fb.auth.signInWithRedirect(provider);
 }
+function showSignInButton(){
+  var box=document.querySelector('.setup-box');
+  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px"><div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
+  var rb=document.getElementById('btn-retry-signin');
+  if(rb)rb.addEventListener('click',function(){triggerGoogleSignIn();});
+}
+var _authListenerSet=false;
 function autoInit(){
-  // Show a loading message on setup screen
   var box=document.querySelector('.setup-box');
   if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>連接中…</div>';
-  try{initFirebaseServices(FIREBASE_CONFIG);}catch(e){
-    if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--danger);font-size:0.9rem">連接失敗：'+esc(e.message)+'</div>';
-    return;
+  if(!state.fb.ready){
+    try{initFirebaseServices(FIREBASE_CONFIG);}catch(e){
+      if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--danger);font-size:0.9rem">連接失敗：'+esc(e.message)+'</div>';
+      return;
+    }
   }
-  // Check if already signed in
-  state.fb.auth.onAuthStateChanged(function(user){
-    if(user){
-      state.fb.user=user;
+  // First check if returning from a redirect sign-in
+  state.fb.auth.getRedirectResult().then(function(result){
+    if(result&&result.user){
+      state.fb.user=result.user;
       enterApp();
-    }else{
-      // Auto-trigger Google sign-in
-      if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>正在登入 Google…</div>';
-      googleSignIn().then(function(ok){
-        if(ok){enterApp();}
-        else{
-          // Sign-in failed or user cancelled — show retry button
-          if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px"><div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
-          var rb=document.getElementById('btn-retry-signin');
-          if(rb)rb.addEventListener('click',function(){autoInit();});
+      return;
+    }
+    // Not from redirect — listen for existing auth state
+    if(!_authListenerSet){
+      _authListenerSet=true;
+      state.fb.auth.onAuthStateChanged(function(user){
+        if(user){
+          state.fb.user=user;
+          enterApp();
+        }else{
+          // No user signed in — show sign-in button
+          showSignInButton();
         }
       });
     }
+  }).catch(function(){
+    showSignInButton();
   });
 }
 
