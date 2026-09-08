@@ -495,7 +495,7 @@ if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){document.documentElement.classList.toggle('dark',e.matches);});
 
 /* === FIREBASE + AUTH === */
-var FIREBASE_CONFIG={apiKey:"AIzaSyB1DZpKEGGuLYt7-S79yiWL8EQ-XUq606w",authDomain:"tcm-app-6846f.web.app",projectId:"tcm-app-6846f",storageBucket:"tcm-app-6846f.firebasestorage.app",messagingSenderId:"491924973084",appId:"1:491924973084:web:2c5a04552e4e8a4eab61d9"};
+var FIREBASE_CONFIG={apiKey:"AIzaSyB1DZpKEGGuLYt7-S79yiWL8EQ-XUq606w",authDomain:"tcm-app-6846f.firebaseapp.com",projectId:"tcm-app-6846f",storageBucket:"tcm-app-6846f.firebasestorage.app",messagingSenderId:"491924973084",appId:"1:491924973084:web:2c5a04552e4e8a4eab61d9"};
 
 function initFirebaseServices(cfg){
   state.fb.app=firebase.initializeApp(cfg);
@@ -523,8 +523,9 @@ function triggerGoogleSignIn(){
 }
 function showSignInButton(errMsg){
   var box=document.querySelector('.setup-box');
+  var debugInfo='Domain: '+window.location.hostname+' | Protocol: '+window.location.protocol;
   var errHtml=errMsg?'<div style="color:var(--danger);font-size:0.82rem;margin-bottom:10px">'+esc(errMsg)+'</div>':'';
-  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px">'+errHtml+'<div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
+  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px">'+errHtml+'<div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button><div style="margin-top:12px;font-size:0.7rem;color:var(--text-2);word-break:break-all">'+esc(debugInfo)+'</div></div>';
   var rb=document.getElementById('btn-retry-signin');
   if(rb)rb.addEventListener('click',function(){triggerGoogleSignIn();});
 }
