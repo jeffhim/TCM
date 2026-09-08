@@ -219,6 +219,25 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
   color:var(--text-1);background:var(--bg-card);cursor:pointer;transition:var(--transition);user-select:none}
 .sel-pill:hover{border-color:var(--accent);color:var(--accent)}
 .sel-pill.chosen{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* Multi-input list */
+.mi-items{margin-bottom:5px}
+.mi-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.mi-row input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-0);color:var(--text-0);font-size:16px;transition:var(--transition)}
+.mi-row input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(217,119,72,0.1)}
+.mi-row button{width:26px;height:26px;border:none;border-radius:50%;background:var(--danger-light);
+  color:var(--danger);cursor:pointer;font-size:0.72rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+/* Herb dosage with unit */
+.herb-dose-wrap{display:flex;flex:1;gap:4px;align-items:center}
+.herb-dose-wrap input{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-size:14px;color:var(--text-0)}
+.herb-dose-wrap input:focus{border-color:var(--accent);outline:none}
+.herb-dose-wrap select{padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-1);font-size:13px;min-width:50px}
+.herb-dose-wrap select:focus{border-color:var(--accent);outline:none}
+/* Unit toggle in detail */
+.unit-toggle{display:inline-flex;gap:0;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-left:8px;vertical-align:middle}
+.unit-toggle button{padding:3px 10px;border:none;background:var(--bg-card);color:var(--text-2);font-size:0.72rem;
+  font-weight:700;cursor:pointer;transition:var(--transition)}
+.unit-toggle button.active{background:var(--accent);color:#fff}
 
 /* === HOME === */
 .home-greeting{font-weight:900;font-size:1.7rem;margin-bottom:3px;line-height:1.3}
@@ -396,9 +415,9 @@ var SECTIONS = {
       {key:'nature',label:'性',type:'select-one',options:['大寒','寒','微寒','涼','微涼','平','微溫','溫','熱','大熱']},
       {key:'taste',label:'味',type:'select-multi',options:['辛','甘','酸','苦','鹹','淡','澀']},
       {key:'meridians',label:'歸經',type:'select-multi',options:['肺','大腸','胃','脾','心','小腸','膀胱','腎','心包','三焦','膽','肝']},
-      {key:'functions',label:'功效',type:'textarea',placeholder:''},
-      {key:'usage',label:'用法用量',type:'textarea',placeholder:''},
-      {key:'contraindications',label:'禁忌',type:'textarea',placeholder:''},
+      {key:'functions',label:'功效',type:'multi-input',placeholder:'輸入後按 Enter 新增…'},
+      {key:'usage',label:'用法用量',type:'multi-input',placeholder:'輸入後按 Enter 新增…'},
+      {key:'contraindications',label:'禁忌',type:'multi-input',placeholder:'輸入後按 Enter 新增…'},
       {key:'relatedFormulas',label:'所屬藥方',type:'formula-tags',placeholder:'搜尋藥方…'},
       {key:'notes',label:'備註',type:'textarea',placeholder:''}
     ],
@@ -406,7 +425,7 @@ var SECTIONS = {
     defaultCategories:['解表藥','清熱藥','瀉下藥','祛風濕藥','化濕藥','利水滲濕藥','溫裡藥','理氣藥','消食藥','驅蟲藥','止血藥','活血化瘀藥','化痰止咳平喘藥','安神藥','平肝息風藥','開竅藥','補虛藥','收澀藥','外用藥'],
     quizFront:function(i){return i.name;},
     quizHint:function(i){return i.category||'';},
-    quizBack:function(i){var xw=(i.nature||'')+(i.taste?'，'+i.taste:'');return [{label:'性味',value:xw},{label:'歸經',value:i.meridians},{label:'功效',value:i.functions},{label:'用法用量',value:i.usage},{label:'禁忌',value:i.contraindications},{label:'備註',value:i.notes}].filter(function(f){return f.value;});}
+    quizBack:function(i){var xw=(i.nature||'')+(i.taste?'，'+i.taste:'');return [{label:'性味',value:xw},{label:'歸經',value:i.meridians},{label:'功效',value:miToStr(i.functions)},{label:'用法用量',value:miToStr(i.usage)},{label:'禁忌',value:miToStr(i.contraindications)},{label:'備註',value:i.notes}].filter(function(f){return f.value;});}
   },
   formulas: {
     key:'formulas',collection:'formulas',name:'藥方',icon:'fa-mortar-pestle',
@@ -425,7 +444,7 @@ var SECTIONS = {
     quizFront:function(i){return i.name;},
     quizHint:function(i){return i.category||'';},
     quizBack:function(i){
-      var cs='';if(i.composition&&i.composition.length){cs=i.composition.map(function(c){return c.name+(c.dosage?'（'+c.dosage+'）':'');}).join('、');}
+      var cs='';if(i.composition&&i.composition.length){cs=i.composition.map(function(c){var d=c.amount?(c.amount+(c.unit||'')):(c.dosage||'');return c.name+(d?'（'+d+'）':'');}).join('、');}
       return [{label:'出處',value:i.source},{label:'組成',value:cs},{label:'功效',value:i.functions},{label:'主治',value:i.indications},{label:'用法',value:i.usage},{label:'備註',value:i.notes}].filter(function(f){return f.value;});
     }
   },
@@ -475,6 +494,7 @@ var state = {
   formImages:{existing:[],pending:[]},
   formComposition:[],
   formFormulaTags:[],
+  formMultiInputs:{},
   lightbox:{images:[],idx:0}
 };
 
@@ -624,6 +644,15 @@ function uploadImage(sec,itemId,file){
 function deleteImageFile(){return Promise.resolve();}
 
 /* === HELPERS === */
+function miToStr(v){if(Array.isArray(v))return v.join('\n');return v||'';}
+function miToArr(v){if(Array.isArray(v))return v.slice();if(typeof v==='string'&&v)return v.split('\n').filter(Boolean);return[];}
+var DOSE_UNITS=['克','兩','斤','個','顆','片','條','ml'];
+function convertDose(amount,fromUnit,toUnit){
+  var a=parseFloat(amount);if(isNaN(a))return amount;
+  var grams={'克':1,'兩':37.5,'斤':600};
+  if(grams[fromUnit]&&grams[toUnit])return+(a*grams[fromUnit]/grams[toUnit]).toFixed(2);
+  return amount;
+}
 function getLevels(s){return(state.config.levels&&state.config.levels[s])||[];}
 function setLevels(s,a){if(!state.config.levels)state.config.levels={};state.config.levels[s]=a;saveConfig();}
 function getCategories(s){var sec=SECTIONS[s],cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});if(sec.defaultCategories)sec.defaultCategories.forEach(function(c){cats.add(c);});return Array.from(cats);}
@@ -633,7 +662,7 @@ function getFilteredItems(sec,ignoreCat){
   if(f.level)items=items.filter(function(i){return i.level===f.level;});
   if(!ignoreCat&&f.category)items=items.filter(function(i){return i.category===f.category;});
   if(f.search){var q=f.search.toLowerCase();var sd=SECTIONS[sec];items=items.filter(function(i){
-    var match=sd.fields.some(function(fd){if(fd.type==='herb-list'||fd.type==='formula-tags')return false;var v=i[fd.key];return v&&String(v).toLowerCase().indexOf(q)!==-1;});
+    var match=sd.fields.some(function(fd){if(fd.type==='herb-list'||fd.type==='formula-tags')return false;var v=i[fd.key];if(fd.type==='multi-input'&&Array.isArray(v))return v.some(function(s){return s.toLowerCase().indexOf(q)!==-1;});return v&&String(v).toLowerCase().indexOf(q)!==-1;});
     if(!match&&i.category)match=i.category.toLowerCase().indexOf(q)!==-1;
     if(!match&&sec==='formulas'&&i.composition)match=i.composition.some(function(c){return c.name&&c.name.toLowerCase().indexOf(q)!==-1;});
     if(!match&&sec==='herbs'&&i.relatedFormulas)match=i.relatedFormulas.some(function(rf){return rf.toLowerCase().indexOf(q)!==-1;});
@@ -703,8 +732,8 @@ function renderList(){
 }
 function renderCard(sec,item){
   var sd=SECTIONS[sec],nm=item[sd.nameField]||'(無標題)',preview='';
-  if(sec==='herbs')preview=item.functions||((item.nature||'')+(item.taste?'，'+item.taste:''))||'';
-  else if(sec==='formulas'){var cn=(item.composition||[]).map(function(c){return c.name;}).join('、');preview=cn||item.functions||'';}
+  if(sec==='herbs')preview=miToStr(item.functions)||((item.nature||'')+(item.taste?'，'+item.taste:''))||'';
+  else if(sec==='formulas'){var cn=(item.composition||[]).map(function(c){return c.name;}).join('、');preview=cn||miToStr(item.functions)||'';}
   else if(sec==='acupoints')preview=item.indications||item.location||'';
   else if(sec==='theories')preview=item.content||'';
   if(preview.length>80)preview=preview.slice(0,80)+'…';
@@ -721,9 +750,10 @@ function renderDetail(){
     if(fd.key===sd.nameField)return;var val=it[fd.key];
     if(fd.key==='tags'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+val.split(',').map(function(t){return'<span class="badge badge-accent">'+esc(t.trim())+'</span>';}).join('')+'</div></div>';}
     else if(fd.key==='content'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value" style="line-height:1.8">'+renderMD(val)+'</div></div>';}
+    else if(fd.type==='multi-input'){var miArr=miToArr(val);if(miArr.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><ul style="margin:0;padding-left:18px">'+miArr.map(function(v){return'<li style="font-size:0.93rem;line-height:1.7">'+esc(v)+'</li>';}).join('')+'</ul></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else if(fd.type==='select-one'){var sv=it[fd.key];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(sv?'<div class="detail-badges"><span class="badge badge-accent">'+esc(sv)+'</span></div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
     else if(fd.type==='select-multi'){var mv=it[fd.key];var mvArr=mv?mv.split(',').map(function(s){return s.trim();}).filter(Boolean):[];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(mvArr.length?'<div class="detail-badges">'+mvArr.map(function(v){return'<span class="badge badge-accent">'+esc(v)+'</span>';}).join('')+'</div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
-    else if(fd.type==='herb-list'){var comp=it.composition;if(comp&&comp.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="comp-list">'+comp.map(function(c){return'<div class="comp-chip"><span class="c-name">'+esc(c.name)+'</span>'+(c.dosage?'<span class="c-dose">'+esc(c.dosage)+'</span>':'')+'</div>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
+    else if(fd.type==='herb-list'){var comp=it.composition;if(comp&&comp.length){var hasWeight=comp.some(function(c){return c.unit&&({'克':1,'兩':1,'斤':1})[c.unit];});fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+(hasWeight?' <span class="unit-toggle" id="unit-toggle"><button class="active" data-unit="克">克</button><button data-unit="兩">兩</button><button data-unit="斤">斤</button></span>':'')+'</div><div class="comp-list" id="comp-list-detail">'+comp.map(function(c){var doseStr=c.amount?(c.amount+(c.unit||'')):'';return'<div class="comp-chip"><span class="c-name">'+esc(c.name)+'</span>'+(doseStr?'<span class="c-dose" data-amount="'+esc(c.amount||'')+'" data-unit="'+esc(c.unit||'')+'">'+esc(doseStr)+'</span>':'')+'</div>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else if(fd.type==='formula-tags'){var rf=it.relatedFormulas;if(rf&&rf.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+rf.map(function(f){return'<span class="badge badge-gold">'+esc(f)+'</span>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value '+(val?'':'empty')+'">'+(val?esc(val):'未填寫')+'</div></div>';}
   });
@@ -741,7 +771,7 @@ function onFabClick(){if(!state.section)return;state.editing=false;state.current
 function renderForm(){
   var el=document.getElementById('view-form'),sec=state.section,sd=SECTIONS[sec],isEdit=state.editing&&state.currentItem,it=isEdit?state.currentItem:{};
   state.formImages={existing:(it.images||[]).slice(),pending:[]};
-  state.formComposition=(it.composition||[]).map(function(c){return{name:c.name,dosage:c.dosage||''};});
+  state.formComposition=(it.composition||[]).map(function(c){return{name:c.name,amount:c.amount||c.dosage||'',unit:c.unit||''};});
   state.formFormulaTags=(it.relatedFormulas||[]).slice();
   var f=state.filter[sec],dLv=isEdit?(it.level||''):(f.level||''),dCat=isEdit?(it.category||''):(f.category||'');
   var levels=getLevels(sec),cats=getCategories(sec);
@@ -750,6 +780,10 @@ function renderForm(){
     if(fd.type==='text'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+(fd.required?' *':'')+'</label><input type="text" id="f-'+fd.key+'" value="'+esc(val)+'" placeholder="'+esc(fd.placeholder||'')+'">'+(fd.key===sd.nameField?'<div class="dupe-warn" id="dupe-warn" style="display:none"></div>':'')+'</div>';}
     else if(fd.type==='textarea'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
     else if(fd.type==='textarea-lg'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" style="min-height:180px" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
+    else if(fd.type==='multi-input'){
+      state.formMultiInputs[fd.key]=miToArr(val);
+      fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div id="mi-wrap-'+fd.key+'">'+renderMultiInputHTML(fd.key,fd.placeholder)+'</div></div>';
+    }
     else if(fd.type==='select-one'){
       var cur=val||'';
       fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div class="sel-pills" id="f-'+fd.key+'" data-seltype="one">'+fd.options.map(function(o){return'<span class="sel-pill'+(o===cur?' chosen':'')+'" data-val="'+esc(o)+'">'+esc(o)+'</span>';}).join('')+'</div></div>';
@@ -765,12 +799,13 @@ function renderForm(){
   var catOpts=cats.map(function(c){return'<option value="'+esc(c)+'">';}).join('');
   var catSel='<div class="form-group"><label>'+esc(sd.categoryLabel)+'</label><input type="text" id="f-category" value="'+esc(dCat)+'" list="cat-list" placeholder="選擇或輸入新'+esc(sd.categoryLabel)+'"><datalist id="cat-list">'+catOpts+'</datalist></div>';
   el.innerHTML='<div class="form-title"><button class="detail-back" data-action="cancel-form"><i class="fa-solid fa-chevron-left"></i></button>'+(isEdit?'編輯':'新增')+sd.name+'</div><div class="form-row">'+lvSel+catSel+'</div>'+fhtml+'<div class="form-group"><label>圖片</label><div class="img-previews" id="img-previews"></div><div class="img-upload-zone" id="img-upload-zone"><i class="fa-solid fa-cloud-arrow-up"></i><p>點擊或拖拽上傳圖片</p><input type="file" id="img-file-input" multiple accept="image/*" style="display:none"></div></div><div class="form-submit"><button class="btn-secondary" data-action="cancel-form">取消</button><button class="btn-primary" data-action="submit-form">儲存</button></div>';
-  setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();setupSelPills();
+  setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();setupSelPills();setupMultiInputEvents();
   var ni=document.getElementById('f-'+sd.nameField);if(ni){var exId=isEdit?it.id:null;var ck=debounce(function(){checkDupe(sec,sd.nameField,ni.value,exId);},300);ni.addEventListener('input',ck);}
 }
 function renderHerbListHTML(){
   var h='<div class="herb-list-items" id="herb-list-items">'+state.formComposition.map(function(c,i){
-    return'<div class="herb-row"><span class="h-name">'+esc(c.name)+'</span><input type="text" placeholder="用量" value="'+esc(c.dosage)+'" data-herb-idx="'+i+'"><button data-action="rm-herb" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';
+    var selOpts=DOSE_UNITS.map(function(u){return'<option value="'+esc(u)+'"'+(c.unit===u?' selected':'')+'>'+esc(u)+'</option>';}).join('');
+    return'<div class="herb-row"><span class="h-name">'+esc(c.name)+'</span><div class="herb-dose-wrap"><input type="text" placeholder="用量" value="'+esc(c.amount)+'" data-herb-idx="'+i+'" data-field="amount"><select data-herb-idx="'+i+'" data-field="unit"><option value="">單位</option>'+selOpts+'</select></div><button data-action="rm-herb" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';
   }).join('')+'</div><div class="tag-input-wrap"><input type="text" id="herb-search-input" placeholder="搜尋中藥名稱以新增…" autocomplete="off"><div class="ac-dropdown" id="herb-dropdown"></div></div>';
   return h;
 }
@@ -794,7 +829,7 @@ function setupHerbListEvents(){
     dd.innerHTML=matches.map(function(h){return'<div class="ac-item" data-action="add-herb" data-name="'+esc(h.name)+'">'+esc(h.name)+(h.pinyin?' <span class="ac-sub">'+esc(h.pinyin)+'</span>':'')+(h.nature?' <span class="ac-sub">'+esc(h.nature)+'</span>':'')+'</div>';}).join('');
     dd.classList.add('show');
   });
-  var items=document.getElementById('herb-list-items');if(items){items.addEventListener('input',function(e){if(e.target.dataset.herbIdx!==undefined){state.formComposition[parseInt(e.target.dataset.herbIdx,10)].dosage=e.target.value;}});}
+  var items=document.getElementById('herb-list-items');if(items){items.addEventListener('input',function(e){if(e.target.dataset.herbIdx!==undefined){var idx=parseInt(e.target.dataset.herbIdx,10);var field=e.target.dataset.field;if(field)state.formComposition[idx][field]=e.target.value;}});items.addEventListener('change',function(e){if(e.target.dataset.herbIdx!==undefined&&e.target.dataset.field==='unit'){var idx=parseInt(e.target.dataset.herbIdx,10);state.formComposition[idx].unit=e.target.value;}});}
 }
 function setupFormulaTagsEvents(){
   var inp=document.getElementById('formula-search-input');if(!inp)return;
@@ -817,6 +852,36 @@ function setupFormulaTagsEvents(){
   });
 }
 
+function renderMultiInputHTML(key,ph){
+  var items=state.formMultiInputs[key]||[];
+  var h='<div class="mi-items" id="mi-items-'+key+'">'+items.map(function(v,i){
+    return'<div class="mi-row"><input type="text" value="'+esc(v)+'" data-mi-key="'+key+'" data-mi-idx="'+i+'" placeholder="'+esc(ph||'')+'"><button data-action="rm-mi" data-mi-key="'+key+'" data-mi-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';
+  }).join('')+'</div><div class="mi-row"><input type="text" id="mi-new-'+key+'" data-mi-key="'+key+'" placeholder="'+esc(ph||'')+'" class="mi-new-input"><button data-action="add-mi" data-mi-key="'+key+'" style="background:var(--accent-light);color:var(--accent)"><i class="fa-solid fa-plus"></i></button></div>';
+  return h;
+}
+function refreshMultiInput(key){
+  var sec=state.section,sd=SECTIONS[sec],fd=sd.fields.find(function(f){return f.key===key;});
+  var w=document.getElementById('mi-wrap-'+key);if(w)w.innerHTML=renderMultiInputHTML(key,fd?fd.placeholder:'');
+  setupMultiInputEvents();
+}
+function setupMultiInputEvents(){
+  document.querySelectorAll('.mi-new-input').forEach(function(inp){
+    if(inp._mibound)return;inp._mibound=true;
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();var k=inp.dataset.miKey,v=inp.value.trim();
+        if(v){state.formMultiInputs[k]=state.formMultiInputs[k]||[];state.formMultiInputs[k].push(v);refreshMultiInput(k);
+          var ni=document.getElementById('mi-new-'+k);if(ni)ni.focus();}}
+    });
+  });
+  document.querySelectorAll('[data-mi-key][data-mi-idx]:not(button)').forEach(function(inp){
+    if(inp._mibound)return;inp._mibound=true;
+    inp.addEventListener('input',function(){var k=inp.dataset.miKey,i=parseInt(inp.dataset.miIdx,10);state.formMultiInputs[k][i]=inp.value;});
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();var ni=document.getElementById('mi-new-'+inp.dataset.miKey);if(ni)ni.focus();}
+      if(e.key==='Backspace'&&!inp.value){e.preventDefault();var k=inp.dataset.miKey,i=parseInt(inp.dataset.miIdx,10);state.formMultiInputs[k].splice(i,1);refreshMultiInput(k);}
+    });
+  });
+}
 function setupSelPills(){
   document.querySelectorAll('.sel-pills').forEach(function(wrap){
     wrap.addEventListener('click',function(e){
@@ -846,6 +911,7 @@ function submitForm(){
   sd.fields.forEach(function(fd){
     if(fd.type==='herb-list'){item.composition=state.formComposition.slice();}
     else if(fd.type==='formula-tags'){item.relatedFormulas=state.formFormulaTags.slice();}
+    else if(fd.type==='multi-input'){item[fd.key]=(state.formMultiInputs[fd.key]||[]).filter(function(s){return s.trim();});}
     else if(fd.type==='select-one'||fd.type==='select-multi'){item[fd.key]=getSelPillValue('f-'+fd.key);}
     else{var el=document.getElementById('f-'+fd.key);if(el)item[fd.key]=el.value.trim();}
   });
@@ -932,6 +998,19 @@ document.addEventListener('click',function(e){
   if(dd1&&!e.target.closest('#herb-list-wrap'))dd1.classList.remove('show');
   if(dd2&&!e.target.closest('#formula-tags-wrap'))dd2.classList.remove('show');
 
+  // Unit toggle in detail view
+  var unitBtn=e.target.closest('[data-unit]');
+  if(unitBtn&&unitBtn.closest('.unit-toggle')){
+    var toggle=unitBtn.closest('.unit-toggle');var toUnit=unitBtn.dataset.unit;
+    toggle.querySelectorAll('button').forEach(function(b){b.classList.toggle('active',b===unitBtn);});
+    var chips=document.getElementById('comp-list-detail');
+    if(chips){chips.querySelectorAll('.c-dose[data-amount]').forEach(function(sp){
+      var origAmount=sp.dataset.amount,origUnit=sp.dataset.unit;
+      if(!origAmount)return;var weightUnits={'克':1,'兩':1,'斤':1};
+      if(weightUnits[origUnit]){var converted=convertDose(origAmount,origUnit,toUnit);sp.textContent=converted+toUnit;}
+    });}
+    return;
+  }
   var tgt=e.target.closest('[data-action]');if(!tgt)return;var act=tgt.dataset.action;
   switch(act){
     case 'detail':openDetail(tgt.dataset.sec,tgt.dataset.id);break;
@@ -962,7 +1041,9 @@ document.addEventListener('click',function(e){
     case 'import':importData();break;
     case 'clear-all':clearAll();break;
     case 'rm-herb':state.formComposition.splice(parseInt(tgt.dataset.idx,10),1);refreshHerbList();break;
-    case 'add-herb':state.formComposition.push({name:tgt.dataset.name,dosage:''});refreshHerbList();break;
+    case 'add-herb':state.formComposition.push({name:tgt.dataset.name,amount:'',unit:''});refreshHerbList();break;
+    case 'rm-mi':state.formMultiInputs[tgt.dataset.miKey].splice(parseInt(tgt.dataset.miIdx,10),1);refreshMultiInput(tgt.dataset.miKey);break;
+    case 'add-mi':var mk=tgt.dataset.miKey,mi=document.getElementById('mi-new-'+mk);if(mi&&mi.value.trim()){state.formMultiInputs[mk]=state.formMultiInputs[mk]||[];state.formMultiInputs[mk].push(mi.value.trim());refreshMultiInput(mk);var ni2=document.getElementById('mi-new-'+mk);if(ni2)ni2.focus();}break;
     case 'rm-ftag':state.formFormulaTags.splice(parseInt(tgt.dataset.idx,10),1);refreshFormulaTags();break;
     case 'add-ftag':if(tgt.dataset.name&&state.formFormulaTags.indexOf(tgt.dataset.name)===-1){state.formFormulaTags.push(tgt.dataset.name);refreshFormulaTags();}break;
   }
