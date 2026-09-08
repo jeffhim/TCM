@@ -506,11 +506,25 @@ function initFirebaseServices(cfg){
 function triggerGoogleSignIn(){
   var provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  state.fb.auth.signInWithRedirect(provider);
-}
-function showSignInButton(){
   var box=document.querySelector('.setup-box');
-  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px"><div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
+  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px;color:var(--text-1);font-size:0.9rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>正在登入…</div>';
+  // Try popup first (works when user-initiated), fallback to redirect
+  state.fb.auth.signInWithPopup(provider).then(function(result){
+    state.fb.user=result.user;
+    enterApp();
+  }).catch(function(e){
+    // If popup blocked or failed, try redirect
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request'){
+      state.fb.auth.signInWithRedirect(provider);
+    }else{
+      showSignInButton(e.message);
+    }
+  });
+}
+function showSignInButton(errMsg){
+  var box=document.querySelector('.setup-box');
+  var errHtml=errMsg?'<div style="color:var(--danger);font-size:0.82rem;margin-bottom:10px">'+esc(errMsg)+'</div>':'';
+  if(box)box.innerHTML='<div class="setup-logo">🌿 岐黃學堂</div><div class="setup-sub">中醫學習助手</div><div style="margin-top:24px">'+errHtml+'<div style="color:var(--text-2);font-size:0.88rem;margin-bottom:14px">需要登入 Google 帳號才能使用</div><button id="btn-retry-signin" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-0);font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-brands fa-google" style="color:#ea4335"></i> 使用 Google 登入</button></div>';
   var rb=document.getElementById('btn-retry-signin');
   if(rb)rb.addEventListener('click',function(){triggerGoogleSignIn();});
 }
@@ -539,7 +553,6 @@ function autoInit(){
           state.fb.user=user;
           enterApp();
         }else{
-          // No user signed in — show sign-in button
           showSignInButton();
         }
       });
