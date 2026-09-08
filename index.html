@@ -425,7 +425,7 @@ var SECTIONS = {
       {key:'notes',label:'備註',type:'textarea',placeholder:''}
     ],
     categoryLabel:'分類',
-    defaultCategories:['解表藥','清熱藥','瀉下藥','祛風濕藥','化濕藥','利水滲濕藥','溫裡藥','理氣藥','消食藥','驅蟲藥','止血藥','活血化瘀藥','化痰止咳平喘藥','安神藥','平肝息風藥','開竅藥','補虛藥','收澀藥','外用藥'],
+    defaultCategories:['解表劑','瀉下劑','和解劑','清熱劑','祛暑劑','溫裡劑','表裡雙解劑','補氣','補血','氣血雙補','補陰','補陽','固澀劑','安神劑','開竅劑','理氣劑','理血劑','治風劑','治燥劑','祛濕劑','祛痰劑','消食劑','驅蟲劑','癰瘍劑','外用劑'],
     quizFront:function(i){return i.name;},
     quizHint:function(i){return i.category||'';},
     quizBack:function(i){var xw=(i.nature||'')+(i.taste?'，'+i.taste:'');return [{label:'性味',value:xw},{label:'歸經',value:i.meridians},{label:'功效',value:miToStr(i.functions)},{label:'禁忌',value:miToStr(i.contraindications)},{label:'備註',value:i.notes}].filter(function(f){return f.value;});}
@@ -443,7 +443,7 @@ var SECTIONS = {
       {key:'notes',label:'備註',type:'textarea',placeholder:''}
     ],
     categoryLabel:'分類',
-    defaultCategories:['解表劑','瀉下劑','和解劑','清熱劑','溫裡劑','補益劑','固澀劑','安神劑','開竅劑','理氣劑','理血劑','治風劑','治燥劑','祛濕劑','祛痰劑','消食劑','驅蟲劑','外用劑'],
+    defaultCategories:['解表劑','瀉下劑','和解劑','清熱劑','祛暑劑','溫裡劑','表裡雙解劑','補氣','補血','氣血雙補','補陰','補陽','固澀劑','安神劑','開竅劑','理氣劑','理血劑','治風劑','治燥劑','祛濕劑','祛痰劑','消食劑','驅蟲劑','癰瘍劑','外用劑'],
     quizFront:function(i){return i.name;},
     quizHint:function(i){return i.category||'';},
     quizBack:function(i){
