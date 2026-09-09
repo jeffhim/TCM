@@ -226,6 +226,14 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 /* Multi-input list */
 .mi-items{margin-bottom:5px}
 .mi-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.mi-ac-wrap{position:relative}
+.mi-ac-dd{position:absolute;left:0;right:32px;top:100%;z-index:50;background:var(--bg-card);
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);max-height:160px;overflow-y:auto;
+  box-shadow:var(--shadow-lg);display:none}
+.mi-ac-dd.show{display:block}
+.mi-ac-dd .ac-item{padding:7px 12px;cursor:pointer;font-size:0.84rem;transition:background 0.15s}
+.mi-ac-dd .ac-item:hover{background:var(--accent-light)}
+.mi-ac-dd .ac-item .ac-count{font-size:0.7rem;color:var(--text-2);margin-left:6px}
 .mi-row input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
   background:var(--bg-0);color:var(--text-0);font-size:16px;transition:var(--transition)}
 .mi-row input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(217,119,72,0.1)}
@@ -862,11 +870,26 @@ function setupFormulaTagsEvents(){
   });
 }
 
+function getMiSuggestions(key,query){
+  var all={},current=state.formMultiInputs[key]||[];
+  (state.data.herbs||[]).forEach(function(herb){
+    var arr=miToArr(herb[key]);
+    arr.forEach(function(v){var t=v.trim();if(t){all[t]=(all[t]||0)+1;}});
+  });
+  current.forEach(function(v){delete all[v.trim()];});
+  if(!query)return[];
+  var q=query.toLowerCase();
+  var results=[];
+  Object.keys(all).forEach(function(k){if(k.toLowerCase().indexOf(q)!==-1)results.push({text:k,count:all[k]});});
+  results.sort(function(a,b){return b.count-a.count;});
+  return results.slice(0,8);
+}
+
 function renderMultiInputHTML(key,ph){
   var items=state.formMultiInputs[key]||[];
   var h='<div class="mi-items" id="mi-items-'+key+'">'+items.map(function(v,i){
     return'<div class="mi-row"><input type="text" value="'+esc(v)+'" data-mi-key="'+key+'" data-mi-idx="'+i+'" placeholder="'+esc(ph||'')+'"><button data-action="rm-mi" data-mi-key="'+key+'" data-mi-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';
-  }).join('')+'</div><div class="mi-row"><input type="text" id="mi-new-'+key+'" data-mi-key="'+key+'" placeholder="'+esc(ph||'')+'" class="mi-new-input"><button data-action="add-mi" data-mi-key="'+key+'" style="background:var(--accent-light);color:var(--accent)"><i class="fa-solid fa-plus"></i></button></div>';
+  }).join('')+'</div><div class="mi-ac-wrap"><div class="mi-row"><input type="text" id="mi-new-'+key+'" data-mi-key="'+key+'" placeholder="'+esc(ph||'')+'" class="mi-new-input" autocomplete="off"><button data-action="add-mi" data-mi-key="'+key+'" style="background:var(--accent-light);color:var(--accent)"><i class="fa-solid fa-plus"></i></button></div><div class="mi-ac-dd" id="mi-ac-dd-'+key+'"></div></div>';
   return h;
 }
 function refreshMultiInput(key){
@@ -874,14 +897,27 @@ function refreshMultiInput(key){
   var w=document.getElementById('mi-wrap-'+key);if(w)w.innerHTML=renderMultiInputHTML(key,fd?fd.placeholder:'');
   setupMultiInputEvents();
 }
+function showMiAc(key,query){
+  var dd=document.getElementById('mi-ac-dd-'+key);if(!dd)return;
+  var MI_AC_KEYS=['functions','contraindications'];
+  if(MI_AC_KEYS.indexOf(key)===-1||!query){dd.classList.remove('show');dd.innerHTML='';return;}
+  var sug=getMiSuggestions(key,query);
+  if(!sug.length){dd.classList.remove('show');dd.innerHTML='';return;}
+  dd.innerHTML=sug.map(function(s){return'<div class="ac-item" data-action="pick-mi-ac" data-mi-key="'+key+'" data-val="'+esc(s.text)+'">'+esc(s.text)+'<span class="ac-count">×'+s.count+'</span></div>';}).join('');
+  dd.classList.add('show');
+}
 function setupMultiInputEvents(){
   document.querySelectorAll('.mi-new-input').forEach(function(inp){
     if(inp._mibound)return;inp._mibound=true;
+    var k=inp.dataset.miKey;
     inp.addEventListener('keydown',function(e){
-      if(e.key==='Enter'){e.preventDefault();var k=inp.dataset.miKey,v=inp.value.trim();
+      if(e.key==='Enter'){e.preventDefault();var v=inp.value.trim();
         if(v){state.formMultiInputs[k]=state.formMultiInputs[k]||[];state.formMultiInputs[k].push(v);refreshMultiInput(k);
           var ni=document.getElementById('mi-new-'+k);if(ni)ni.focus();}}
+      if(e.key==='Escape'){var dd=document.getElementById('mi-ac-dd-'+k);if(dd)dd.classList.remove('show');}
     });
+    inp.addEventListener('input',function(){showMiAc(k,inp.value.trim());});
+    inp.addEventListener('blur',function(){setTimeout(function(){var dd=document.getElementById('mi-ac-dd-'+k);if(dd)dd.classList.remove('show');},180);});
   });
   document.querySelectorAll('[data-mi-key][data-mi-idx]:not(button)').forEach(function(inp){
     if(inp._mibound)return;inp._mibound=true;
@@ -1054,6 +1090,7 @@ document.addEventListener('click',function(e){
     case 'add-herb':state.formComposition.push({name:tgt.dataset.name,amount:'',unit:''});refreshHerbList();break;
     case 'rm-mi':state.formMultiInputs[tgt.dataset.miKey].splice(parseInt(tgt.dataset.miIdx,10),1);refreshMultiInput(tgt.dataset.miKey);break;
     case 'add-mi':var mk=tgt.dataset.miKey,mi=document.getElementById('mi-new-'+mk);if(mi&&mi.value.trim()){state.formMultiInputs[mk]=state.formMultiInputs[mk]||[];state.formMultiInputs[mk].push(mi.value.trim());refreshMultiInput(mk);var ni2=document.getElementById('mi-new-'+mk);if(ni2)ni2.focus();}break;
+    case 'pick-mi-ac':var pk=tgt.dataset.miKey,pv=tgt.dataset.val;if(pk&&pv){state.formMultiInputs[pk]=state.formMultiInputs[pk]||[];state.formMultiInputs[pk].push(pv);refreshMultiInput(pk);var ni3=document.getElementById('mi-new-'+pk);if(ni3)ni3.focus();}break;
     case 'rm-ftag':state.formFormulaTags.splice(parseInt(tgt.dataset.idx,10),1);refreshFormulaTags();break;
     case 'add-ftag':if(tgt.dataset.name&&state.formFormulaTags.indexOf(tgt.dataset.name)===-1){state.formFormulaTags.push(tgt.dataset.name);refreshFormulaTags();}break;
     case 'goto-formula':var fn=tgt.dataset.fname;if(fn){var fm=state.data.formulas.find(function(f){return f.name===fn;});if(fm)openDetail('formulas',fm.id);else toast('找不到藥方「'+fn+'」');}break;
