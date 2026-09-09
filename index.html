@@ -212,8 +212,8 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .ac-item:hover{background:var(--accent-light)}
 .ac-item .ac-sub{font-size:0.73rem;color:var(--text-2);margin-left:6px}
 .herb-list-items{margin-bottom:7px}
-.herb-row{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg-0);border-radius:var(--radius-sm);margin-bottom:5px}
-.herb-row .h-name{font-weight:700;font-size:0.86rem;min-width:50px;color:var(--accent)}
+.herb-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg-0);border-radius:var(--radius-sm);margin-bottom:6px}
+.herb-row .h-name{font-weight:700;font-size:0.9rem;min-width:50px;flex-shrink:0;color:var(--accent)}
 .herb-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-size:14px;color:var(--text-0)}
 .herb-row input:focus{border-color:var(--accent);outline:none}
 .herb-row button{width:26px;height:26px;border:none;border-radius:50%;background:var(--danger-light);
@@ -240,10 +240,10 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .mi-row button{width:26px;height:26px;border:none;border-radius:50%;background:var(--danger-light);
   color:var(--danger);cursor:pointer;font-size:0.72rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 /* Herb dosage with unit */
-.herb-dose-wrap{display:flex;flex:1;gap:4px;align-items:center}
-.herb-dose-wrap input{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-size:14px;color:var(--text-0)}
+.herb-dose-wrap{display:flex;gap:5px;align-items:center;min-width:0;flex-shrink:0}
+.herb-dose-wrap input{width:64px;min-width:54px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-size:16px;color:var(--text-0);text-align:center}
 .herb-dose-wrap input:focus{border-color:var(--accent);outline:none}
-.herb-dose-wrap select{padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-1);font-size:13px;min-width:50px}
+.herb-dose-wrap select{padding:7px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-1);font-size:15px;min-width:52px}
 .herb-dose-wrap select:focus{border-color:var(--accent);outline:none}
 /* Unit toggle in detail */
 .unit-toggle{display:inline-flex;gap:0;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-left:8px;vertical-align:middle}
@@ -445,8 +445,8 @@ var SECTIONS = {
       {key:'name',label:'方名',type:'text',required:true,placeholder:'如：四物湯'},
       {key:'source',label:'出處',type:'text',placeholder:'如：太平惠民和劑局方'},
       {key:'composition',label:'組成藥材',type:'herb-list'},
-      {key:'functions',label:'功效',type:'textarea',placeholder:''},
-      {key:'indications',label:'主治',type:'textarea',placeholder:''},
+      {key:'functions',label:'功效',type:'multi-input',placeholder:'輸入後按 Enter 新增…'},
+      {key:'indications',label:'主治',type:'multi-input',placeholder:'輸入後按 Enter 新增…'},
       {key:'usage',label:'用法',type:'textarea',placeholder:''},
       {key:'notes',label:'備註',type:'textarea',placeholder:''}
     ],
@@ -456,7 +456,7 @@ var SECTIONS = {
     quizHint:function(i){return i.category||'';},
     quizBack:function(i){
       var cs='';if(i.composition&&i.composition.length){cs=i.composition.map(function(c){var d=c.amount?(c.amount+(c.unit||'')):(c.dosage||'');return c.name+(d?'（'+d+'）':'');}).join('、');}
-      return [{label:'出處',value:i.source},{label:'組成',value:cs},{label:'功效',value:i.functions},{label:'主治',value:i.indications},{label:'用法',value:i.usage},{label:'備註',value:i.notes}].filter(function(f){return f.value;});
+      return [{label:'出處',value:i.source},{label:'組成',value:cs},{label:'功效',value:miToStr(i.functions)},{label:'主治',value:miToStr(i.indications)},{label:'用法',value:i.usage},{label:'備註',value:i.notes}].filter(function(f){return f.value;});
     }
   },
   acupoints: {
@@ -836,6 +836,46 @@ function renderFormulaTagsHTML(){
 function refreshHerbList(){var w=document.getElementById('herb-list-wrap');if(w)w.innerHTML=renderHerbListHTML();setupHerbListEvents();}
 function refreshFormulaTags(){var w=document.getElementById('formula-tags-wrap');if(w)w.innerHTML=renderFormulaTagsHTML();setupFormulaTagsEvents();}
 
+function quickAddHerb(prefill){
+  var sd=SECTIONS.herbs,natOpts=sd.fields.find(function(f){return f.key==='nature';}).options;
+  var tasteOpts=sd.fields.find(function(f){return f.key==='taste';}).options;
+  var meridOpts=sd.fields.find(function(f){return f.key==='meridians';}).options;
+  var html='<div style="display:flex;flex-direction:column;gap:10px">'+
+    '<div><label style="font-size:0.8rem;font-weight:700;color:var(--text-2)">藥名 *</label><input type="text" id="qh-name" value="'+esc(prefill||'')+'" placeholder="如：黃芪" style="font-size:16px"></div>'+
+    '<div><label style="font-size:0.8rem;font-weight:700;color:var(--text-2)">拼音</label><input type="text" id="qh-pinyin" placeholder="如：Huáng Qí" style="font-size:16px"></div>'+
+    '<div><label style="font-size:0.8rem;font-weight:700;color:var(--text-2)">性</label><div class="sel-pills qh-pills" id="qh-nature" data-seltype="one" data-key="nature">'+natOpts.map(function(o){return'<span class="sel-pill" data-val="'+esc(o)+'">'+esc(o)+'</span>';}).join('')+'</div></div>'+
+    '<div><label style="font-size:0.8rem;font-weight:700;color:var(--text-2)">味</label><div class="sel-pills qh-pills" id="qh-taste" data-seltype="multi" data-key="taste">'+tasteOpts.map(function(o){return'<span class="sel-pill" data-val="'+esc(o)+'">'+esc(o)+'</span>';}).join('')+'</div></div>'+
+    '<div><label style="font-size:0.8rem;font-weight:700;color:var(--text-2)">歸經</label><div class="sel-pills qh-pills" id="qh-meridians" data-seltype="multi" data-key="meridians">'+meridOpts.map(function(o){return'<span class="sel-pill" data-val="'+esc(o)+'">'+esc(o)+'</span>';}).join('')+'</div></div>'+
+    '</div>';
+  return new Promise(function(resolve){
+    var ov=document.createElement('div');ov.className='modal-overlay';
+    ov.innerHTML='<div class="modal-box" style="max-width:460px"><div class="modal-title"><i class="fa-solid fa-leaf" style="color:var(--accent);margin-right:6px"></i>快速新增中藥</div><div class="modal-body">'+html+'</div><div class="modal-btns"><button class="btn-secondary" data-act="cancel">取消</button><button class="btn-primary" data-act="ok"><i class="fa-solid fa-check" style="margin-right:4px"></i>新增並加入</button></div></div>';
+    function close(v){ov.remove();resolve(v);}
+    ov.querySelector('[data-act="cancel"]').addEventListener('click',function(){close(null);});
+    ov.addEventListener('click',function(e){if(e.target===ov)close(null);});
+    ov.querySelectorAll('.qh-pills').forEach(function(wrap){
+      wrap.addEventListener('click',function(e){
+        var pill=e.target.closest('.sel-pill');if(!pill)return;
+        if(wrap.dataset.seltype==='one'){wrap.querySelectorAll('.sel-pill').forEach(function(p){p.classList.remove('active');});pill.classList.toggle('active');}
+        else{pill.classList.toggle('active');}
+      });
+    });
+    ov.querySelector('[data-act="ok"]').addEventListener('click',function(){
+      var name=ov.querySelector('#qh-name').value.trim();
+      if(!name){ov.querySelector('#qh-name').style.borderColor='var(--danger)';return;}
+      var pinyin=ov.querySelector('#qh-pinyin').value.trim();
+      var natureEl=ov.querySelector('#qh-nature .sel-pill.active');var nature=natureEl?natureEl.dataset.val:'';
+      var tasteArr=[];ov.querySelectorAll('#qh-taste .sel-pill.active').forEach(function(p){tasteArr.push(p.dataset.val);});
+      var meridArr=[];ov.querySelectorAll('#qh-meridians .sel-pill.active').forEach(function(p){meridArr.push(p.dataset.val);});
+      var newHerb={id:uid(),name:name,pinyin:pinyin,nature:nature,taste:tasteArr.join(','),meridians:meridArr.join(','),functions:[],contraindications:[],relatedFormulas:[],notes:'',images:[],category:'',level:'',srs:{interval:0,repetition:0,ef:2.5,nextReview:0},createdAt:Date.now(),updatedAt:Date.now()};
+      state.data.herbs.push(newHerb);
+      saveItem('herbs',newHerb);
+      close(name);
+    });
+    document.body.appendChild(ov);
+    setTimeout(function(){ov.querySelector('#qh-name').focus();},100);
+  });
+}
 function setupHerbListEvents(){
   var inp=document.getElementById('herb-search-input');if(!inp)return;
   inp.addEventListener('input',function(){
@@ -843,8 +883,9 @@ function setupHerbListEvents(){
     if(!v){dd.classList.remove('show');return;}
     var existing=state.formComposition.map(function(c){return c.name.toLowerCase();});
     var matches=state.data.herbs.filter(function(h){return(h.name&&h.name.toLowerCase().indexOf(v)!==-1||h.pinyin&&h.pinyin.toLowerCase().indexOf(v)!==-1)&&existing.indexOf(h.name.toLowerCase())===-1;}).slice(0,8);
-    if(!matches.length){dd.classList.remove('show');return;}
-    dd.innerHTML=matches.map(function(h){return'<div class="ac-item" data-action="add-herb" data-name="'+esc(h.name)+'">'+esc(h.name)+(h.pinyin?' <span class="ac-sub">'+esc(h.pinyin)+'</span>':'')+(h.nature?' <span class="ac-sub">'+esc(h.nature)+'</span>':'')+'</div>';}).join('');
+    var items=matches.map(function(h){return'<div class="ac-item" data-action="add-herb" data-name="'+esc(h.name)+'">'+esc(h.name)+(h.pinyin?' <span class="ac-sub">'+esc(h.pinyin)+'</span>':'')+(h.nature?' <span class="ac-sub">'+esc(h.nature)+'</span>':'')+'</div>';}).join('');
+    items+='<div class="ac-item" data-action="quick-new-herb" data-prefill="'+esc(inp.value.trim())+'" style="color:var(--accent);font-weight:600"><i class="fa-solid fa-plus" style="margin-right:5px;font-size:0.75rem"></i>新增「'+esc(inp.value.trim())+'」為新中藥</div>';
+    dd.innerHTML=items;
     dd.classList.add('show');
   });
   var items=document.getElementById('herb-list-items');if(items){items.addEventListener('input',function(e){if(e.target.dataset.herbIdx!==undefined){var idx=parseInt(e.target.dataset.herbIdx,10);var field=e.target.dataset.field;if(field)state.formComposition[idx][field]=e.target.value;}});items.addEventListener('change',function(e){if(e.target.dataset.herbIdx!==undefined&&e.target.dataset.field==='unit'){var idx=parseInt(e.target.dataset.herbIdx,10);state.formComposition[idx].unit=e.target.value;}});}
@@ -872,9 +913,11 @@ function setupFormulaTagsEvents(){
 
 function getMiSuggestions(key,query){
   var all={},current=state.formMultiInputs[key]||[];
-  (state.data.herbs||[]).forEach(function(herb){
-    var arr=miToArr(herb[key]);
-    arr.forEach(function(v){var t=v.trim();if(t){all[t]=(all[t]||0)+1;}});
+  ['herbs','formulas'].forEach(function(sec){
+    (state.data[sec]||[]).forEach(function(item){
+      var arr=miToArr(item[key]);
+      arr.forEach(function(v){var t=v.trim();if(t){all[t]=(all[t]||0)+1;}});
+    });
   });
   current.forEach(function(v){delete all[v.trim()];});
   if(!query)return[];
@@ -899,7 +942,7 @@ function refreshMultiInput(key){
 }
 function showMiAc(key,query){
   var dd=document.getElementById('mi-ac-dd-'+key);if(!dd)return;
-  var MI_AC_KEYS=['functions','contraindications'];
+  var MI_AC_KEYS=['functions','contraindications','indications'];
   if(MI_AC_KEYS.indexOf(key)===-1||!query){dd.classList.remove('show');dd.innerHTML='';return;}
   var sug=getMiSuggestions(key,query);
   if(!sug.length){dd.classList.remove('show');dd.innerHTML='';return;}
@@ -1088,6 +1131,7 @@ document.addEventListener('click',function(e){
     case 'clear-all':clearAll();break;
     case 'rm-herb':state.formComposition.splice(parseInt(tgt.dataset.idx,10),1);refreshHerbList();break;
     case 'add-herb':state.formComposition.push({name:tgt.dataset.name,amount:'',unit:''});refreshHerbList();break;
+    case 'quick-new-herb':var dd0=document.getElementById('herb-dropdown');if(dd0)dd0.classList.remove('show');quickAddHerb(tgt.dataset.prefill).then(function(nm){if(nm){state.formComposition.push({name:nm,amount:'',unit:''});refreshHerbList();toast('已新增「'+nm+'」到中藥庫');}});break;
     case 'rm-mi':state.formMultiInputs[tgt.dataset.miKey].splice(parseInt(tgt.dataset.miIdx,10),1);refreshMultiInput(tgt.dataset.miKey);break;
     case 'add-mi':var mk=tgt.dataset.miKey,mi=document.getElementById('mi-new-'+mk);if(mi&&mi.value.trim()){state.formMultiInputs[mk]=state.formMultiInputs[mk]||[];state.formMultiInputs[mk].push(mi.value.trim());refreshMultiInput(mk);var ni2=document.getElementById('mi-new-'+mk);if(ni2)ni2.focus();}break;
     case 'pick-mi-ac':var pk=tgt.dataset.miKey,pv=tgt.dataset.val;if(pk&&pv){state.formMultiInputs[pk]=state.formMultiInputs[pk]||[];state.formMultiInputs[pk].push(pv);refreshMultiInput(pk);var ni3=document.getElementById('mi-new-'+pk);if(ni3)ni3.focus();}break;
