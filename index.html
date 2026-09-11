@@ -666,7 +666,7 @@ function convertDose(amount,fromUnit,toUnit){
 }
 function getLevels(s){return(state.config.levels&&state.config.levels[s])||[];}
 function setLevels(s,a){if(!state.config.levels)state.config.levels={};state.config.levels[s]=a;saveConfig();}
-function getCategories(s){var sec=SECTIONS[s],cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});if(sec.defaultCategories)sec.defaultCategories.forEach(function(c){cats.add(c);});return Array.from(cats);}
+function getCategories(s){var sec=SECTIONS[s];if(sec.defaultCategories)return sec.defaultCategories.slice();var cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
 function getUsedCategories(s){var pool=getFilteredItems(s,true),cats=new Set();pool.forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
 function getFilteredItems(sec,ignoreCat){
   var f=state.filter[sec],items=state.data[sec]||[];
