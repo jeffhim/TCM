@@ -777,7 +777,7 @@ function renderCard(sec,item){
 }
 
 /* === DETAIL === */
-function openDetail(sec,id){var item=state.data[sec].find(function(x){return x.id===id;});if(!item)return;state.section=sec;state.currentItem=item;state.view='detail';showView('detail');hideSubHeader();showFab(false);renderDetail();}
+function openDetail(sec,id){var item=state.data[sec].find(function(x){return x.id===id;});if(!item)return;state.section=sec;state.currentItem=item;state.view='detail';showView('detail');hideSubHeader();showFab(false);renderDetail();var ca=document.getElementById('content-area');if(ca)ca.scrollTop=0;}
 function renderDetail(){
   var el=document.getElementById('view-detail'),it=state.currentItem,sec=state.section,sd=SECTIONS[sec],nm=it[sd.nameField]||'(無標題)';
   var fh='';sd.fields.forEach(function(fd){
@@ -1169,6 +1169,20 @@ document.getElementById('lb-prev').addEventListener('click',function(){lbNav(-1)
 document.getElementById('lb-next').addEventListener('click',function(){lbNav(1);});
 document.addEventListener('keydown',function(e){if(document.getElementById('lightbox').classList.contains('open')){if(e.key==='Escape')closeLightbox();else if(e.key==='ArrowLeft')lbNav(-1);else if(e.key==='ArrowRight')lbNav(1);}});
 (function(){var sx=0,lb=document.getElementById('lightbox');lb.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});lb.addEventListener('touchend',function(e){var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50)lbNav(d<0?1:-1);},{passive:true});})();
+
+/* === SWIPE BACK === */
+(function(){
+  var ca=document.getElementById('content-area'),sx=0,sy=0;
+  ca.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  ca.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(dx>80&&Math.abs(dy)<80){
+      if(state.view==='detail'){backToList();}
+      else if(state.view==='form'){cancelForm();}
+      else if(state.view==='settings'){switchTab(state.tab==='settings'?'home':(state.tab||'home'));}
+    }
+  },{passive:true});
+})();
 
 /* === PWA === */
 (function initPWA(){
