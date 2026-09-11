@@ -664,6 +664,22 @@ function convertDose(amount,fromUnit,toUnit){
   if(grams[fromUnit]&&grams[toUnit])return+(a*grams[fromUnit]/grams[toUnit]).toFixed(2);
   return amount;
 }
+function getHerbFormulas(herbName){
+  var names=new Set();
+  (state.data.formulas||[]).forEach(function(f){
+    if(f.composition&&f.composition.length){
+      f.composition.forEach(function(c){if(c.name===herbName)names.add(f.name);});
+    }
+  });
+  return Array.from(names);
+}
+function mergeFormulas(herb){
+  var manual=herb.relatedFormulas||[];
+  var auto=getHerbFormulas(herb.name||'');
+  var set=new Set(manual);
+  auto.forEach(function(n){set.add(n);});
+  return Array.from(set);
+}
 function getLevels(s){return(state.config.levels&&state.config.levels[s])||[];}
 function setLevels(s,a){if(!state.config.levels)state.config.levels={};state.config.levels[s]=a;saveConfig();}
 function getCategories(s){var sec=SECTIONS[s];if(sec.defaultCategories)return sec.defaultCategories.slice();var cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
@@ -676,7 +692,7 @@ function getFilteredItems(sec,ignoreCat){
     var match=sd.fields.some(function(fd){if(fd.type==='herb-list'||fd.type==='formula-tags')return false;var v=i[fd.key];if(fd.type==='multi-input'&&Array.isArray(v))return v.some(function(s){return s.toLowerCase().indexOf(q)!==-1;});return v&&String(v).toLowerCase().indexOf(q)!==-1;});
     if(!match&&i.category)match=i.category.toLowerCase().indexOf(q)!==-1;
     if(!match&&sec==='formulas'&&i.composition)match=i.composition.some(function(c){return c.name&&c.name.toLowerCase().indexOf(q)!==-1;});
-    if(!match&&sec==='herbs'&&i.relatedFormulas)match=i.relatedFormulas.some(function(rf){return rf.toLowerCase().indexOf(q)!==-1;});
+    if(!match&&sec==='herbs')match=mergeFormulas(i).some(function(rf){return rf.toLowerCase().indexOf(q)!==-1;});
     return match;
   });}
   return items;
@@ -752,8 +768,8 @@ function renderCard(sec,item){
   if(sec==='herbs'){
     var xw=(item.nature||'')+(item.taste?'，'+item.taste:'');
     if(xw)herbExtra+='<div class="card-herb-xw"><i class="fa-solid fa-yin-yang" style="font-size:0.72rem;opacity:0.6;margin-right:3px"></i>'+esc(xw)+'</div>';
-    var rf=item.relatedFormulas;
-    if(rf&&rf.length)herbExtra+='<div class="card-herb-formulas">'+rf.map(function(f){return'<span class="badge badge-gold-sm">'+esc(f)+'</span>';}).join('')+'</div>';
+    var rf=mergeFormulas(item);
+    if(rf.length)herbExtra+='<div class="card-herb-formulas">'+rf.map(function(f){return'<span class="badge badge-gold-sm">'+esc(f)+'</span>';}).join('')+'</div>';
   }
   var imgs='';if(item.images&&item.images.length){imgs='<div class="card-thumbs">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" alt="">';}).join('')+(item.images.length>4?'<span style="font-size:0.73rem;color:var(--text-2);align-self:center">+'+(item.images.length-4)+'</span>':'')+'</div>';}
   var srs='';if(item.srs&&item.srs.nextReview&&item.srs.nextReview<=Date.now())srs='<span style="color:var(--danger)"><i class="fa-solid fa-clock"></i> 待複習</span>';
@@ -772,7 +788,7 @@ function renderDetail(){
     else if(fd.type==='select-one'){var sv=it[fd.key];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(sv?'<div class="detail-badges"><span class="badge badge-accent">'+esc(sv)+'</span></div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
     else if(fd.type==='select-multi'){var mv=it[fd.key];var mvArr=mv?mv.split(',').map(function(s){return s.trim();}).filter(Boolean):[];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(mvArr.length?'<div class="detail-badges">'+mvArr.map(function(v){return'<span class="badge badge-accent">'+esc(v)+'</span>';}).join('')+'</div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
     else if(fd.type==='herb-list'){var comp=it.composition;if(comp&&comp.length){var hasWeight=comp.some(function(c){return c.unit&&({'克':1,'兩':1,'斤':1})[c.unit];});fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+(hasWeight?' <span class="unit-toggle" id="unit-toggle"><button class="active" data-unit="克">克</button><button data-unit="兩">兩</button><button data-unit="斤">斤</button></span>':'')+'</div><div class="comp-list" id="comp-list-detail">'+comp.map(function(c){var doseStr=c.amount?(c.amount+(c.unit||'')):'';return'<div class="comp-chip"><span class="c-name">'+esc(c.name)+'</span>'+(doseStr?'<span class="c-dose" data-amount="'+esc(c.amount||'')+'" data-unit="'+esc(c.unit||'')+'">'+esc(doseStr)+'</span>':'')+'</div>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
-    else if(fd.type==='formula-tags'){var rf=it.relatedFormulas;if(rf&&rf.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+rf.map(function(f){return'<span class="badge badge-gold badge-link" data-action="goto-formula" data-fname="'+esc(f)+'">'+esc(f)+' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;margin-left:3px;opacity:0.6"></i></span>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
+    else if(fd.type==='formula-tags'){var rf=mergeFormulas(it);if(rf.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+rf.map(function(f){return'<span class="badge badge-gold badge-link" data-action="goto-formula" data-fname="'+esc(f)+'">'+esc(f)+' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;margin-left:3px;opacity:0.6"></i></span>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value '+(val?'':'empty')+'">'+(val?esc(val):'未填寫')+'</div></div>';}
   });
   var ih='';if(it.images&&it.images.length){ih='<div class="detail-section"><div class="detail-label">圖片 ('+it.images.length+')</div><div class="img-gallery">'+it.images.map(function(u,i){return'<img src="'+esc(u)+'" alt="" data-action="lightbox" data-idx="'+i+'">';}).join('')+'</div></div>';}
