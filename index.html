@@ -306,6 +306,48 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .quiz-results{max-width:480px;margin:0 auto;text-align:center}
 .quiz-results .result-score{font-weight:900;font-size:2.8rem;color:var(--accent);margin:18px 0}
 
+/* Quiz type badges */
+.q-type-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:14px;
+  font-size:0.76rem;font-weight:700;margin-bottom:12px}
+.q-type-badge.flip{background:var(--accent-light);color:var(--accent)}
+.q-type-badge.mcq{background:#dbeafe;color:#2563eb}
+html.dark .q-type-badge.mcq{background:#1e293b;color:#60a5fa}
+.q-type-badge.fill{background:#fce7f3;color:#db2777}
+html.dark .q-type-badge.fill{background:#2a1929;color:#f472b6}
+
+/* MCQ card */
+.mcq-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:24px 20px;box-shadow:var(--shadow-lg)}
+.mcq-question{font-weight:900;font-size:1.45rem;margin-bottom:6px;text-align:center;line-height:1.4}
+.mcq-hint{font-size:0.82rem;color:var(--text-2);text-align:center;margin-bottom:14px}
+.mcq-field-label{font-size:0.8rem;color:var(--text-1);font-weight:700;margin-bottom:8px}
+.mcq-options{display:flex;flex-direction:column;gap:8px}
+.mcq-opt{width:100%;padding:13px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-0);color:var(--text-0);font-size:0.92rem;font-weight:600;text-align:left;
+  cursor:pointer;transition:var(--transition);line-height:1.5}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-light)}
+.mcq-opt.correct{border-color:#059669;background:#d1fae5;color:#065f46;cursor:default}
+html.dark .mcq-opt.correct{background:#0f2922;color:#6ee7b7;border-color:#10b981}
+.mcq-opt.wrong{border-color:#dc2626;background:#fee2e2;color:#991b1b;cursor:default}
+html.dark .mcq-opt.wrong{background:#2e1414;color:#fca5a5;border-color:#ef4444}
+.mcq-opt.correct::before{content:'\f058';font-family:'Font Awesome 6 Free';font-weight:900;margin-right:8px;font-size:1rem}
+.mcq-opt.wrong::before{content:'\f057';font-family:'Font Awesome 6 Free';font-weight:900;margin-right:8px;font-size:1rem}
+
+/* Fill-in-blank */
+.fill-prompt{font-size:0.92rem;color:var(--text-1);margin-bottom:12px;text-align:center;font-weight:600}
+.fill-clue{background:var(--bg-0);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;text-align:center;border:1px solid var(--border-light)}
+.fill-clue-label{display:block;font-size:0.72rem;color:var(--text-2);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px}
+.fill-clue-value{display:block;font-size:1.05rem;color:var(--text-0);line-height:1.6;font-weight:600}
+.fill-input-wrap{display:flex;gap:8px;align-items:stretch}
+.fill-input{flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-0);color:var(--text-0);font-size:16px;transition:var(--transition)}
+.fill-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(217,119,72,0.12)}
+.fill-result{padding:14px;border-radius:var(--radius-sm);text-align:center;font-weight:700;font-size:0.92rem;margin-top:10px}
+.fill-result .fill-result-icon{display:flex;align-items:center;justify-content:center;gap:7px}
+.fill-result.correct{background:#d1fae5;color:#065f46}
+html.dark .fill-result.correct{background:#0f2922;color:#6ee7b7}
+.fill-result.wrong{background:#fee2e2;color:#991b1b}
+html.dark .fill-result.wrong{background:#2e1414;color:#fca5a5}
+
 /* === SETTINGS === */
 .settings-section{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .settings-section h3{font-size:0.92rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
@@ -1092,31 +1134,123 @@ function renderQuizSetup(){
     '<div class="form-group"><label>科目</label><select id="q-section"><option value="herbs">中藥</option><option value="formulas">藥方</option><option value="acupoints">穴道</option></select></div>'+
     '<div class="form-group"><label>級別</label><select id="q-level"><option value="">全部</option></select></div>'+
     '<div class="form-group"><label>分類</label><select id="q-category"><option value="">全部</option></select></div>'+
-    '<div class="form-group"><label>模式</label><select id="q-mode"><option value="all">全部項目</option><option value="due"'+(due>0?' selected':'')+'>待複習</option><option value="new">未學習</option></select></div>'+
+    '<div class="form-group"><label>篩選</label><select id="q-mode"><option value="all">全部項目</option><option value="due"'+(due>0?' selected':'')+'>待複習</option><option value="new">未學習</option></select></div>'+
+    '<div class="form-group"><label>題型</label><select id="q-type"><option value="flip">翻卡</option><option value="mcq">選擇題</option><option value="fill">填充題</option><option value="mix" selected>混合</option></select></div>'+
     '<div class="form-group"><label>題數</label><select id="q-count"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="0">全部</option></select></div>'+
     '<button class="btn-primary" data-action="start-quiz" style="width:100%;padding:13px;margin-top:6px"><i class="fa-solid fa-play"></i> 開始測驗</button></div>';
   document.getElementById('q-section').addEventListener('change',updateQF);updateQF();
 }
 function updateQF(){var s=document.getElementById('q-section').value;document.getElementById('q-level').innerHTML='<option value="">全部</option>'+getLevels(s).map(function(l){return'<option value="'+esc(l)+'">'+esc(l)+'</option>';}).join('');document.getElementById('q-category').innerHTML='<option value="">全部</option>'+getUsedCategories(s).map(function(c){return'<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');}
+function shuffle(arr){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr;}
+function pickQuizType(qtype){if(qtype==='mix')return['flip','mcq','fill'][Math.floor(Math.random()*3)];return qtype;}
+function genMCQData(sec,item,allItems){
+  var sd=SECTIONS[sec],bf=sd.quizBack(item);
+  var fields=bf.filter(function(f){return f.value&&f.value.length>0;});
+  if(!fields.length)return null;
+  var field=fields[Math.floor(Math.random()*fields.length)];
+  var distractors=[];
+  var others=allItems.filter(function(o){return o.id!==item.id;});
+  shuffle(others);
+  for(var i=0;i<others.length&&distractors.length<3;i++){
+    var obf=sd.quizBack(others[i]);
+    var of=obf.find(function(f){return f.label===field.label;});
+    if(of&&of.value&&of.value!==field.value&&distractors.indexOf(of.value)===-1)distractors.push(of.value);
+  }
+  if(distractors.length<2)return null;
+  var options=shuffle(distractors.concat([field.value]));
+  return{question:sd.quizFront(item),hint:sd.quizHint(item),fieldLabel:field.label,answer:field.value,options:options};
+}
+function genFillData(sec,item){
+  var sd=SECTIONS[sec],bf=sd.quizBack(item);
+  var fields=bf.filter(function(f){return f.value&&f.value.length>0&&f.value.length<40;});
+  if(!fields.length)return null;
+  var field=fields[Math.floor(Math.random()*fields.length)];
+  return{clueLabel:field.label,clueValue:field.value,hint:sd.quizHint(item),answer:sd.quizFront(item)};
+}
 function startQuiz(){
-  var s=document.getElementById('q-section').value,lv=document.getElementById('q-level').value,cat=document.getElementById('q-category').value,mode=document.getElementById('q-mode').value,cnt=parseInt(document.getElementById('q-count').value,10);
+  var s=document.getElementById('q-section').value,lv=document.getElementById('q-level').value,cat=document.getElementById('q-category').value,mode=document.getElementById('q-mode').value,qtype=document.getElementById('q-type').value,cnt=parseInt(document.getElementById('q-count').value,10);
   var pool=state.data[s].slice();if(lv)pool=pool.filter(function(i){return i.level===lv;});if(cat)pool=pool.filter(function(i){return i.category===cat;});
   var now=Date.now();if(mode==='due')pool=pool.filter(function(i){return i.srs&&i.srs.nextReview&&i.srs.nextReview<=now;});else if(mode==='new')pool=pool.filter(function(i){return!i.srs||!i.srs.lastReview;});
   if(!pool.length){showAlert('沒有符合條件的項目');return;}
-  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t;}
+  shuffle(pool);
   if(cnt>0&&pool.length>cnt)pool=pool.slice(0,cnt);
-  state.quiz={active:true,section:s,cards:pool,idx:0,flipped:false,results:[]};state.view='quiz-play';showView('quiz-play');renderQC();
+  state.quiz={active:true,section:s,cards:pool,idx:0,flipped:false,results:[],qtype:qtype,answered:false,selected:null,curType:null};
+  nextQuizQ();
+}
+function nextQuizQ(){
+  var q=state.quiz,sd=SECTIONS[q.section],item=q.cards[q.idx];
+  q.flipped=false;q.answered=false;q.selected=null;
+  var t=pickQuizType(q.qtype);
+  if(t==='mcq'){var md=genMCQData(q.section,item,state.data[q.section]);if(!md)t='flip';else{q.mcq=md;}}
+  if(t==='fill'){var fd=genFillData(q.section,item);if(!fd)t='flip';else{q.fill=fd;}}
+  q.curType=t;
+  state.view='quiz-play';showView('quiz-play');renderQC();
+  var ca=document.getElementById('content-area');if(ca)ca.scrollTop=0;
 }
 function renderQC(){
   var el=document.getElementById('view-quiz-play'),q=state.quiz,sd=SECTIONS[q.section],item=q.cards[q.idx],prog=(q.idx/q.cards.length*100).toFixed(0);
-  var bf=sd.quizBack(item),bi='';if(item.images&&item.images.length)bi='<div class="img-gallery" style="margin-top:10px">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" style="max-height:70px;width:auto;aspect-ratio:auto" alt="">';}).join('')+'</div>';
-  var rt=q.flipped?'<div class="quiz-rating"><button class="rate-again" data-action="rate" data-q="1"><span style="font-size:1.1rem">😟</span>重來</button><button class="rate-hard" data-action="rate" data-q="3"><span style="font-size:1.1rem">😐</span>困難</button><button class="rate-good" data-action="rate" data-q="4"><span style="font-size:1.1rem">😊</span>良好</button><button class="rate-easy" data-action="rate" data-q="5"><span style="font-size:1.1rem">🌟</span>容易</button></div>':'';
-  el.innerHTML='<div class="quiz-card-wrap"><div class="quiz-progress"><span>'+(q.idx+1)+' / '+q.cards.length+'</span><div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:'+prog+'%"></div></div><button style="background:transparent;border:none;color:var(--text-2);cursor:pointer;font-size:0.83rem" data-action="quit-quiz">結束</button></div><div class="quiz-card '+(q.flipped?'flipped':'')+'" data-action="flip-card"><div class="quiz-face quiz-front"><div class="q-name">'+esc(sd.quizFront(item))+'</div><div class="q-hint">'+esc(sd.quizHint(item))+'</div><div class="q-tap">點擊翻轉</div></div><div class="quiz-face quiz-back">'+bf.map(function(f){return'<div class="q-field"><div class="q-field-label">'+esc(f.label)+'</div><div class="q-field-value">'+esc(f.value)+'</div></div>';}).join('')+bi+'</div></div>'+rt+'</div>';
+  var header='<div class="quiz-progress"><span>'+(q.idx+1)+' / '+q.cards.length+'</span><div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:'+prog+'%"></div></div><button style="background:transparent;border:none;color:var(--text-2);cursor:pointer;font-size:0.83rem" data-action="quit-quiz">結束</button></div>';
+  var typeLabel=q.curType==='mcq'?'<span class="q-type-badge mcq"><i class="fa-solid fa-list-check"></i> 選擇題</span>':q.curType==='fill'?'<span class="q-type-badge fill"><i class="fa-solid fa-pen-fancy"></i> 填充題</span>':'<span class="q-type-badge flip"><i class="fa-solid fa-clone"></i> 翻卡</span>';
+  if(q.curType==='flip'){
+    var bf=sd.quizBack(item),bi='';if(item.images&&item.images.length)bi='<div class="img-gallery" style="margin-top:10px">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" style="max-height:70px;width:auto;aspect-ratio:auto" alt="">';}).join('')+'</div>';
+    var rt=q.flipped?'<div class="quiz-rating"><button class="rate-again" data-action="rate" data-q="1"><span style="font-size:1.1rem">😟</span>重來</button><button class="rate-hard" data-action="rate" data-q="3"><span style="font-size:1.1rem">😐</span>困難</button><button class="rate-good" data-action="rate" data-q="4"><span style="font-size:1.1rem">😊</span>良好</button><button class="rate-easy" data-action="rate" data-q="5"><span style="font-size:1.1rem">🌟</span>容易</button></div>':'';
+    el.innerHTML='<div class="quiz-card-wrap">'+header+typeLabel+'<div class="quiz-card '+(q.flipped?'flipped':'')+'" data-action="flip-card"><div class="quiz-face quiz-front"><div class="q-name">'+esc(sd.quizFront(item))+'</div><div class="q-hint">'+esc(sd.quizHint(item))+'</div><div class="q-tap">點擊翻轉</div></div><div class="quiz-face quiz-back">'+bf.map(function(f){return'<div class="q-field"><div class="q-field-label">'+esc(f.label)+'</div><div class="q-field-value">'+esc(f.value)+'</div></div>';}).join('')+bi+'</div></div>'+rt+'</div>';
+  }else if(q.curType==='mcq'){
+    var m=q.mcq;
+    var opts=m.options.map(function(o,i){
+      var cls='mcq-opt';
+      if(q.answered){if(o===m.answer)cls+=' correct';else if(o===q.selected)cls+=' wrong';}
+      return'<button class="'+cls+'" data-action="mcq-answer" data-val="'+esc(o)+'">'+esc(o)+'</button>';
+    }).join('');
+    var next=q.answered?'<button class="btn-primary mcq-next" data-action="mcq-next" style="width:100%;padding:12px;margin-top:12px"><i class="fa-solid fa-arrow-right" style="margin-right:5px"></i>下一題</button>':'';
+    el.innerHTML='<div class="quiz-card-wrap">'+header+typeLabel+'<div class="mcq-card"><div class="mcq-question">'+esc(m.question)+'</div><div class="mcq-hint">'+esc(m.hint)+'</div><div class="mcq-field-label">'+esc(m.fieldLabel)+'：</div><div class="mcq-options">'+opts+'</div>'+next+'</div></div>';
+  }else if(q.curType==='fill'){
+    var f=q.fill;
+    var reveal='';
+    if(q.answered){
+      var isCorrect=q.selected&&q.selected.trim()===f.answer.trim();
+      reveal='<div class="fill-result '+(isCorrect?'correct':'wrong')+'"><div class="fill-result-icon">'+(isCorrect?'<i class="fa-solid fa-circle-check"></i> 正確':'<i class="fa-solid fa-circle-xmark"></i> 正確答案：<b>'+esc(f.answer)+'</b>')+'</div></div><button class="btn-primary mcq-next" data-action="mcq-next" style="width:100%;padding:12px;margin-top:12px"><i class="fa-solid fa-arrow-right" style="margin-right:5px"></i>下一題</button>';
+    }
+    el.innerHTML='<div class="quiz-card-wrap">'+header+typeLabel+'<div class="mcq-card"><div class="fill-prompt">以下描述的是哪個'+esc(SECTIONS[q.section].name)+'？</div><div class="fill-clue"><span class="fill-clue-label">'+esc(f.clueLabel)+'</span><span class="fill-clue-value">'+esc(f.clueValue)+'</span></div>'+(f.hint?'<div class="mcq-hint">'+esc(f.hint)+'</div>':'')+(q.answered?reveal:'<div class="fill-input-wrap"><input type="text" id="fill-answer" class="fill-input" placeholder="輸入答案…" autocomplete="off"><button class="btn-primary" data-action="fill-submit" style="padding:10px 18px"><i class="fa-solid fa-check"></i></button></div>')+'</div></div>';
+    if(!q.answered){var fi=document.getElementById('fill-answer');if(fi){fi.focus();fi.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();submitFill();}});}}
+  }
 }
 function flipQC(){if(state.quiz.flipped)return;state.quiz.flipped=true;renderQC();}
-function rateQuiz(q){var qz=state.quiz,item=qz.cards[qz.idx];item.srs=sm2(item.srs,q);qz.results.push({item:item,quality:q});saveItem(qz.section,{id:item.id,srs:item.srs}).then(function(){qz.idx++;qz.flipped=false;if(qz.idx>=qz.cards.length)finishQuiz();else renderQC();});}
+function answerMCQ(val){
+  var q=state.quiz;if(q.answered)return;
+  q.answered=true;q.selected=val;
+  var isCorrect=val===q.mcq.answer;
+  var quality=isCorrect?4:1;
+  var item=q.cards[q.idx];item.srs=sm2(item.srs,quality);
+  q.results.push({item:item,quality:quality});
+  saveItem(q.section,{id:item.id,srs:item.srs});
+  renderQC();
+}
+function submitFill(){
+  var q=state.quiz;if(q.answered)return;
+  var inp=document.getElementById('fill-answer');
+  var val=inp?inp.value.trim():'';
+  q.answered=true;q.selected=val;
+  var isCorrect=val===q.fill.answer.trim();
+  var quality=isCorrect?4:1;
+  var item=q.cards[q.idx];item.srs=sm2(item.srs,quality);
+  q.results.push({item:item,quality:quality});
+  saveItem(q.section,{id:item.id,srs:item.srs});
+  renderQC();
+}
+function nextQuizAfterAnswer(){
+  var q=state.quiz;q.idx++;
+  if(q.idx>=q.cards.length)finishQuiz();
+  else nextQuizQ();
+}
+function rateQuiz(q){var qz=state.quiz,item=qz.cards[qz.idx];item.srs=sm2(item.srs,q);qz.results.push({item:item,quality:q});saveItem(qz.section,{id:item.id,srs:item.srs}).then(function(){qz.idx++;qz.flipped=false;if(qz.idx>=qz.cards.length)finishQuiz();else nextQuizQ();});}
 function finishQuiz(){state.quiz.active=false;state.view='quiz-results';showView('quiz-results');renderQR();updateDueBadge();}
-function renderQR(){var el=document.getElementById('view-quiz-results'),q=state.quiz,tot=q.results.length,good=q.results.filter(function(r){return r.quality>=3;}).length,pct=tot?Math.round(good/tot*100):0,bd={1:0,3:0,4:0,5:0};q.results.forEach(function(r){bd[r.quality]=(bd[r.quality]||0)+1;});el.innerHTML='<div class="quiz-results"><div class="section-title" style="font-size:1.15rem;justify-content:center"><i class="fa-solid fa-flag-checkered"></i> 測驗完成</div><div class="result-score">'+pct+'%</div><div style="font-size:0.88rem;color:var(--text-1);margin-bottom:18px">共 '+tot+' 題<br>😟 重來：'+(bd[1]||0)+' ｜ 😐 困難：'+(bd[3]||0)+' ｜ 😊 良好：'+(bd[4]||0)+' ｜ 🌟 容易：'+(bd[5]||0)+'</div><button class="btn-primary" data-action="quiz-again" style="width:100%;padding:13px"><i class="fa-solid fa-rotate-left"></i> 再測一次</button><button class="btn-secondary" data-action="quiz-home" style="width:100%;padding:13px;margin-top:7px;border:1.5px solid var(--border)">回首頁</button></div>';}
+function renderQR(){
+  var el=document.getElementById('view-quiz-results'),q=state.quiz,tot=q.results.length,good=q.results.filter(function(r){return r.quality>=3;}).length,pct=tot?Math.round(good/tot*100):0;
+  var correct=q.results.filter(function(r){return r.quality>=3;}).length;
+  var wrong=tot-correct;
+  el.innerHTML='<div class="quiz-results"><div class="section-title" style="font-size:1.15rem;justify-content:center"><i class="fa-solid fa-flag-checkered"></i> 測驗完成</div><div class="result-score">'+pct+'%</div><div style="font-size:0.88rem;color:var(--text-1);margin-bottom:18px">共 '+tot+' 題<br><span style="color:#059669">✓ 正確：'+correct+'</span> ｜ <span style="color:#dc2626">✗ 錯誤：'+wrong+'</span></div><button class="btn-primary" data-action="quiz-again" style="width:100%;padding:13px"><i class="fa-solid fa-rotate-left"></i> 再測一次</button><button class="btn-secondary" data-action="quiz-home" style="width:100%;padding:13px;margin-top:7px;border:1.5px solid var(--border)">回首頁</button></div>';
+}
 
 /* === SETTINGS === */
 function showSettings(){state.view='settings';showView('settings');hideSubHeader();showFab(false);document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});renderSettings();}
@@ -1124,8 +1258,7 @@ function renderSettings(){
   var el=document.getElementById('view-settings'),fbs=state.fb.ready?'<span style="color:var(--accent)"><i class="fa-solid fa-circle-check"></i> 已連接</span>':'<span style="color:var(--text-2)"><i class="fa-solid fa-circle-xmark"></i> 本機模式</span>';
   var authInfo='';
   if(state.fb.ready&&state.fb.user){authInfo='<div class="settings-item"><span>帳號</span><span style="font-size:0.82rem;color:var(--accent);font-weight:600"><i class="fa-solid fa-user"></i> '+esc(state.fb.user.email)+'</span></div><div class="settings-item"><span>登出帳號</span><button data-action="sign-out" style="color:var(--danger);border-color:var(--danger)"><i class="fa-solid fa-right-from-bracket"></i> 登出</button></div>';}
-  var ls='';ALL_SECTIONS.forEach(function(sec){var sd=SECTIONS[sec],lvs=getLevels(sec);var items='';lvs.forEach(function(lv,i){items+='<div class="lm-item"><span>'+esc(lv)+'</span><button data-action="mv-level" data-sec="'+sec+'" data-idx="'+i+'" data-dir="-1"><i class="fa-solid fa-chevron-up"></i></button><button data-action="mv-level" data-sec="'+sec+'" data-idx="'+i+'" data-dir="1"><i class="fa-solid fa-chevron-down"></i></button><button data-action="rename-level" data-sec="'+sec+'" data-lv="'+esc(lv)+'"><i class="fa-solid fa-pen"></i></button><button data-action="del-level" data-sec="'+sec+'" data-lv="'+esc(lv)+'" style="color:var(--danger)"><i class="fa-solid fa-trash"></i></button></div>';});if(!lvs.length)items='<div style="font-size:0.83rem;color:var(--text-2);padding:7px">尚未新增</div>';ls+='<div class="settings-section"><h3><i class="fa-solid '+sd.icon+'"></i> '+sd.name+' 級別</h3><div>'+items+'</div><button class="btn-secondary" data-action="add-level" data-sec="'+sec+'" style="width:100%;margin-top:7px;padding:7px;border:1.5px solid var(--border)"><i class="fa-solid fa-plus"></i> 新增級別</button></div>';});
-  el.innerHTML='<div class="detail-header" style="margin-bottom:14px"><button class="detail-back" data-action="settings-back"><i class="fa-solid fa-chevron-left"></i></button><div class="detail-title">設定</div></div><div class="settings-section"><h3><i class="fa-solid fa-database"></i> Firebase</h3><div class="settings-item"><span>狀態</span>'+fbs+'</div>'+authInfo+'<div class="settings-item"><span>重新設定</span><button data-action="reset-fb">變更連接</button></div></div>'+ls+'<div class="settings-section"><h3><i class="fa-solid fa-download"></i> 資料管理</h3><div class="settings-item"><span>匯出資料</span><button data-action="export">匯出 JSON</button></div><div class="settings-item"><span>匯入資料</span><button data-action="import">匯入 JSON</button></div><div class="settings-item"><span>清除所有資料</span><button data-action="clear-all" style="color:var(--danger);border-color:var(--danger)">清除</button></div></div>';
+  el.innerHTML='<div class="detail-header" style="margin-bottom:14px"><button class="detail-back" data-action="settings-back"><i class="fa-solid fa-chevron-left"></i></button><div class="detail-title">設定</div></div><div class="settings-section"><h3><i class="fa-solid fa-database"></i> Firebase</h3><div class="settings-item"><span>狀態</span>'+fbs+'</div>'+authInfo+'<div class="settings-item"><span>重新設定</span><button data-action="reset-fb">變更連接</button></div></div><div class="settings-section"><h3><i class="fa-solid fa-download"></i> 資料管理</h3><div class="settings-item"><span>匯出資料</span><button data-action="export">匯出 JSON</button></div><div class="settings-item"><span>匯入資料</span><button data-action="import">匯入 JSON</button></div><div class="settings-item"><span>清除所有資料</span><button data-action="clear-all" style="color:var(--danger);border-color:var(--danger)">清除</button></div></div>';
 }
 function addLevel(s){showPrompt('新增級別','','級別名稱').then(function(n){if(!n||!n.trim())return;var lvs=getLevels(s);if(lvs.indexOf(n.trim())!==-1){toast('已存在','error');return;}lvs.push(n.trim());setLevels(s,lvs);renderSettings();toast('已新增','success');});}
 function renameLevel(s,old){showPrompt('重命名級別',old,'新名稱').then(function(nn){if(!nn||!nn.trim()||nn.trim()===old)return;var lvs=getLevels(s),idx=lvs.indexOf(old);if(idx<0)return;var t=nn.trim();lvs[idx]=t;setLevels(s,lvs);state.data[s].forEach(function(i){if(i.level===old)i.level=t;});saveLocal(s);if(state.fb.ready){var b=state.fb.db.batch();state.data[s].forEach(function(i){if(i.level===t)b.update(state.fb.db.collection(s).doc(i.id),{level:t});});b.commit().catch(function(){});}renderSettings();toast('已重命名','success');});}
@@ -1174,6 +1307,9 @@ document.addEventListener('click',function(e){
     case 'flip-card':flipQC();break;
     case 'rate':rateQuiz(parseInt(tgt.dataset.q,10));break;
     case 'quit-quiz':if(state.quiz.results.length)finishQuiz();else switchTab('quiz');break;
+    case 'mcq-answer':answerMCQ(tgt.dataset.val);break;
+    case 'mcq-next':nextQuizAfterAnswer();break;
+    case 'fill-submit':submitFill();break;
     case 'quiz-again':switchTab('quiz');break;
     case 'quiz-home':switchTab('home');break;
     case 'settings-back':switchTab(state.tab==='settings'?'home':(state.tab||'home'));break;
