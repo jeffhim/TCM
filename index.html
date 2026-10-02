@@ -183,7 +183,7 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form-submit{display:flex;gap:10px;margin-top:22px}
 .form-submit button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;cursor:pointer;transition:var(--transition)}
-.dupe-warn{color:var(--gold);font-size:0.79rem;margin-top:4px;display:flex;align-items:center;gap:4px}
+.dupe-warn{color:var(--gold);font-size:0.79rem;margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;line-height:1.7}
 .img-upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:22px;text-align:center;
   color:var(--text-2);cursor:pointer;transition:var(--transition);margin-top:7px}
 .img-upload-zone:hover,.img-upload-zone.dragover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
@@ -348,6 +348,43 @@ html.dark .fill-result.correct{background:#0f2922;color:#6ee7b7}
 .fill-result.wrong{background:#fee2e2;color:#991b1b}
 html.dark .fill-result.wrong{background:#2e1414;color:#fca5a5}
 
+/* === MERIDIAN MAP === */
+.merid-banner{background:linear-gradient(135deg,var(--accent-light) 0%,var(--gold-light) 100%);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;border:1.5px solid var(--border-light);transition:var(--transition)}
+.merid-banner:hover{border-color:var(--accent);transform:translateX(2px)}
+.merid-banner-icon{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.merid-banner-text{flex:1;min-width:0}
+.merid-banner-text .title{font-weight:800;font-size:0.92rem;margin-bottom:2px}
+.merid-banner-text .sub{font-size:0.78rem;color:var(--text-2)}
+.merid-banner-arrow{color:var(--text-2);font-size:0.85rem}
+.merid-map-wrap{display:flex;justify-content:center;padding:0 10px;margin-bottom:18px}
+.merid-map-wrap svg{width:100%;max-width:340px;height:auto}
+.merid-dot-active{filter:drop-shadow(0 0 4px currentColor)}
+@keyframes meridPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.merid-dot-active{animation:meridPulse 2s ease-in-out infinite}
+.merid-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;justify-content:center}
+.merid-legend-item{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-1);
+  padding:3px 8px;border-radius:10px;background:var(--bg-0);border:1px solid var(--border-light);cursor:pointer;transition:var(--transition)}
+.merid-legend-item:hover{border-color:var(--accent)}
+.merid-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.merid-stats{background:var(--bg-card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.merid-stats-title{font-weight:800;font-size:0.92rem;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.merid-progress-total{text-align:center;margin-bottom:16px;padding:14px;background:linear-gradient(135deg,var(--accent-light),var(--gold-light));border-radius:var(--radius-sm)}
+.merid-progress-total .big{font-weight:900;font-size:2rem;color:var(--accent);display:block;line-height:1.2}
+.merid-progress-total .label{font-size:0.82rem;color:var(--text-2)}
+.merid-stat-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light)}
+.merid-stat-row:last-child{border-bottom:none}
+.merid-stat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.merid-stat-name{font-size:0.78rem;font-weight:600;min-width:90px;color:var(--text-0)}
+.merid-stat-bar{flex:1;height:6px;background:var(--bg-1);border-radius:3px;overflow:hidden}
+.merid-stat-bar span{display:block;height:100%;border-radius:3px;transition:width 0.5s ease}
+.merid-stat-num{font-size:0.72rem;color:var(--text-2);font-weight:700;min-width:32px;text-align:right}
+.merid-tooltip{position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;font-size:0.76rem;font-weight:600;box-shadow:var(--shadow);pointer-events:none;
+  z-index:10;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px}
+
 /* === SETTINGS === */
 .settings-section{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .settings-section h3{font-size:0.92rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
@@ -433,6 +470,7 @@ html.dark .fill-result.wrong{background:#2e1414;color:#fca5a5}
   <div class="content-area" id="content-area">
     <div class="view" id="view-home"></div>
     <div class="view" id="view-list"></div>
+    <div class="view" id="view-meridian"></div>
     <div class="view" id="view-detail"></div>
     <div class="view" id="view-form"></div>
     <div class="view" id="view-quiz-setup"></div>
@@ -541,6 +579,11 @@ var SECTIONS = {
 
 var ALL_SECTIONS = ['herbs','formulas','acupoints','theories'];
 var QUIZZABLE = ['herbs','formulas','acupoints'];
+var QUIZ_FIELDS = {
+  herbs:['性味','歸經','功效','禁忌'],
+  formulas:['出處','組成','功效','主治','用法'],
+  acupoints:['經脈','代碼','定位','主治','刺灸法']
+};
 
 /* === STATE === */
 var state = {
@@ -749,17 +792,49 @@ function getLevels(s){return(state.config.levels&&state.config.levels[s])||[];}
 function setLevels(s,a){if(!state.config.levels)state.config.levels={};state.config.levels[s]=a;saveConfig();}
 function getCategories(s){var sec=SECTIONS[s];if(sec.defaultCategories)return sec.defaultCategories.slice();var cats=new Set();state.data[s].forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
 function getUsedCategories(s){var pool=getFilteredItems(s,true),cats=new Set();pool.forEach(function(i){if(i.category)cats.add(i.category);});return Array.from(cats);}
+function itemMatchesQuery(sec,i,q){
+  var sd=SECTIONS[sec];
+  // Search all text fields
+  var match=sd.fields.some(function(fd){
+    if(fd.type==='herb-list'){
+      // Search composition names, prep, amounts
+      if(i.composition)return i.composition.some(function(c){
+        return(c.name&&c.name.toLowerCase().indexOf(q)!==-1)||(c.prep&&c.prep.toLowerCase().indexOf(q)!==-1);
+      });
+      return false;
+    }
+    if(fd.type==='formula-tags'){
+      var rf=mergeFormulas(i);
+      return rf.some(function(f){return f.toLowerCase().indexOf(q)!==-1;});
+    }
+    var v=i[fd.key];
+    if(fd.type==='multi-input'){
+      var arr=miToArr(v);
+      return arr.some(function(s){return s.toLowerCase().indexOf(q)!==-1;});
+    }
+    return v&&String(v).toLowerCase().indexOf(q)!==-1;
+  });
+  // Search category and level
+  if(!match&&i.category)match=i.category.toLowerCase().indexOf(q)!==-1;
+  if(!match&&i.level)match=i.level.toLowerCase().indexOf(q)!==-1;
+  // Search tags for theories
+  if(!match&&i.tags)match=i.tags.toLowerCase().indexOf(q)!==-1;
+  return match;
+}
 function getFilteredItems(sec,ignoreCat){
   var f=state.filter[sec],items=state.data[sec]||[];
   if(f.level)items=items.filter(function(i){return i.level===f.level;});
   if(!ignoreCat&&f.category)items=items.filter(function(i){return i.category===f.category;});
-  if(f.search){var q=f.search.toLowerCase();var sd=SECTIONS[sec];items=items.filter(function(i){
-    var match=sd.fields.some(function(fd){if(fd.type==='herb-list'||fd.type==='formula-tags')return false;var v=i[fd.key];if(fd.type==='multi-input'&&Array.isArray(v))return v.some(function(s){return s.toLowerCase().indexOf(q)!==-1;});return v&&String(v).toLowerCase().indexOf(q)!==-1;});
-    if(!match&&i.category)match=i.category.toLowerCase().indexOf(q)!==-1;
-    if(!match&&sec==='formulas'&&i.composition)match=i.composition.some(function(c){return c.name&&c.name.toLowerCase().indexOf(q)!==-1;});
-    if(!match&&sec==='herbs')match=mergeFormulas(i).some(function(rf){return rf.toLowerCase().indexOf(q)!==-1;});
-    return match;
-  });}
+  if(f.search){
+    var raw=f.search.trim().toLowerCase();
+    // Split into keywords for multi-word search
+    var keywords=raw.split(/\s+/).filter(Boolean);
+    if(keywords.length){
+      items=items.filter(function(i){
+        return keywords.every(function(q){return itemMatchesQuery(sec,i,q);});
+      });
+    }
+  }
   return items;
 }
 function sm2(srs,q){var iv=(srs&&srs.interval)||0,rp=(srs&&srs.repetition)||0,ef=(srs&&srs.efactor)||2.5;if(q<3){rp=0;iv=1;}else{if(rp===0)iv=1;else if(rp===1)iv=6;else iv=Math.round(iv*ef);rp++;}ef=Math.max(1.3,ef+(0.1-(5-q)*(0.08+(5-q)*0.02)));return{interval:iv,repetition:rp,efactor:ef,nextReview:Date.now()+iv*86400000,lastReview:Date.now()};}
@@ -818,9 +893,14 @@ function findSection(item){for(var i=0;i<ALL_SECTIONS.length;i++){if(state.data[
 /* === LIST === */
 function renderList(){
   var sec=state.section;if(!sec)return;var el=document.getElementById('view-list'),items=getFilteredItems(sec,false),sd=SECTIONS[sec];
-  if(!items.length){var f=state.filter[sec];el.innerHTML='<div class="empty-state"><i class="fa-solid '+sd.icon+'"></i><p>'+(f.level||f.category||f.search?'沒有符合條件的項目':'尚未新增任何'+sd.name)+'</p></div>';return;}
+  var banner='';
+  if(sec==='acupoints'){
+    var mc=getMeridianCompletion();
+    banner='<div class="merid-banner" data-action="show-meridian"><div class="merid-banner-icon"><i class="fa-solid fa-person-rays"></i></div><div class="merid-banner-text"><div class="title">經脈穴位圖</div><div class="sub">已完成 '+mc.found+' / '+mc.total+' 穴位 ('+mc.pct+'%)</div></div><div class="merid-banner-arrow"><i class="fa-solid fa-chevron-right"></i></div></div>';
+  }
+  if(!items.length){var f=state.filter[sec];el.innerHTML=banner+'<div class="empty-state"><i class="fa-solid '+sd.icon+'"></i><p>'+(f.level||f.category||f.search?'沒有符合條件的項目':'尚未新增任何'+sd.name)+'</p></div>';return;}
   items.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});
-  el.innerHTML=items.map(function(it){return renderCard(sec,it);}).join('');
+  el.innerHTML=banner+items.map(function(it){return renderCard(sec,it);}).join('');
 }
 function renderCard(sec,item){
   var sd=SECTIONS[sec],nm=item[sd.nameField]||'(無標題)',preview='';
@@ -839,6 +919,169 @@ function renderCard(sec,item){
   var imgs='';if(item.images&&item.images.length){imgs='<div class="card-thumbs">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" alt="">';}).join('')+(item.images.length>4?'<span style="font-size:0.73rem;color:var(--text-2);align-self:center">+'+(item.images.length-4)+'</span>':'')+'</div>';}
   var srs='';if(item.srs&&item.srs.nextReview&&item.srs.nextReview<=Date.now())srs='<span style="color:var(--danger)"><i class="fa-solid fa-clock"></i> 待複習</span>';
   return'<div class="card" data-action="detail" data-sec="'+sec+'" data-id="'+item.id+'"><div class="card-title">'+esc(nm)+'</div><div class="card-sub">'+esc(item.category||'')+(item.level?' · '+esc(item.level):'')+'</div>'+herbExtra+(preview?'<div class="card-preview">'+esc(preview)+'</div>':'')+'<div class="card-meta">'+(item.images&&item.images.length?'<span><i class="fa-solid fa-image"></i> '+item.images.length+'</span>':'')+srs+'</div>'+imgs+'</div>';
+}
+
+/* === MERIDIAN MAP === */
+var MERID=[
+['LU','肺經','手太陰肺經','#64748b',[['LU1','中府',90,94],['LU5','尺澤',52,142],['LU7','列缺',39,195],['LU9','太淵',37,210],['LU11','少商',22,252]]],
+['LI','大腸經','手陽明大腸經','#ca8a04',[['LI1','商陽',26,254],['LI4','合谷',28,238],['LI10','手三里',39,168],['LI11','曲池',44,142],['LI15','肩髃',73,70],['LI20','迎香',121,36]]],
+['HT','心經','手少陰心經','#e11d48',[['HT1','極泉',82,84],['HT3','少海',54,144],['HT7','神門',38,212],['HT9','少衝',28,255]]],
+['SI','小腸經','手太陽小腸經','#f43f5e',[['SI1','少澤',30,256],['SI3','後谿',32,240],['SI9','肩貞',78,78],['SI19','聽宮',110,28]]],
+['PC','心包經','手厥陰心包經','#dc2626',[['PC1','天池',86,98],['PC3','曲澤',50,141],['PC6','內關',40,188],['PC8','勞宮',30,230],['PC9','中衝',25,253]]],
+['TE','三焦經','手少陽三焦經','#ea580c',[['TE1','關衝',27,255],['TE5','外關',36,188],['TE14','肩髎',70,68],['TE17','翳風',108,32],['TE23','絲竹空',114,20]]],
+['ST','胃經','足陽明胃經','#d97706',[['ST2','四白',124,28],['ST6','頰車',114,44],['ST25','天樞',118,160],['ST34','梁丘',91,286],['ST36','足三里',88,320],['ST40','豐隆',86,355],['ST44','內庭',80,452]]],
+['SP','脾經','足太陰脾經','#c2410c',[['SP1','隱白',92,458],['SP3','太白',96,440],['SP6','三陰交',100,392],['SP9','陰陵泉',102,312],['SP10','血海',104,288]]],
+['GB','膽經','足少陽膽經','#16a34a',[['GB1','瞳子髎',142,24],['GB20','風池',110,52],['GB21','肩井',98,66],['GB30','環跳',100,198],['GB34','陽陵泉',86,316],['GB39','懸鐘',83,395],['GB41','足臨泣',79,448]]],
+['BL','膀胱經','足太陽膀胱經','#2563eb',[['BL1','睛明',126,24],['BL2','攢竹',122,18],['BL13','肺俞',118,102],['BL23','腎俞',116,152],['BL40','委中',90,304],['BL57','承山',87,365],['BL60','崑崙',84,408],['BL67','至陰',78,458]]],
+['KI','腎經','足少陰腎經','#4338ca',[['KI1','涌泉',94,462],['KI3','太谿',98,412],['KI6','照海',100,400],['KI10','陰谷',104,306],['KI27','俞府',122,86]]],
+['LR','肝經','足厥陰肝經','#15803d',[['LR1','大敦',90,460],['LR3','太衝',94,444],['LR8','曲泉',106,308],['LR14','期門',112,118]]],
+['CV','任脈','任脈','#7c3aed',[['CV3','中極',130,195],['CV4','關元',130,188],['CV6','氣海',130,172],['CV8','神闕',130,160],['CV12','中脘',130,135],['CV17','膻中',130,100],['CV22','天突',130,62],['CV24','承漿',130,44]]],
+['GV','督脈','督脈','#9333ea',[['GV4','命門',134,155],['GV14','大椎',134,66],['GV20','百會',130,8],['GV26','人中',130,38]]]
+];
+var MERID_ALIAS={SJ:'TE',RN:'CV',DU:'GV',KD:'KI',LV:'LR'};
+var MERID_BY_ID={},MERID_BY_CAT={};
+MERID.forEach(function(m){MERID_BY_ID[m[0]]=m;MERID_BY_CAT[m[2]]=m;});
+function parseAcuCode(raw){
+  if(!raw)return null;
+  var c=raw.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var prefix=c.replace(/[0-9]/g,'');
+  var num=parseInt(c.replace(/[^0-9]/g,''),10);
+  if(MERID_ALIAS[prefix])prefix=MERID_ALIAS[prefix];
+  if(!prefix||isNaN(num))return null;
+  return{prefix:prefix,num:num,full:c};
+}
+function interpolateMeridPos(merid,num){
+  var pts=merid[4];
+  var ex=pts.map(function(p){var m=p[0].match(/\d+/);return{num:m?parseInt(m[0],10):0,x:p[2],y:p[3]};}).sort(function(a,b){return a.num-b.num;});
+  if(!ex.length)return null;
+  if(num<=ex[0].num)return{x:ex[0].x+(Math.random()*4-2),y:ex[0].y-6};
+  if(num>=ex[ex.length-1].num)return{x:ex[ex.length-1].x+(Math.random()*4-2),y:ex[ex.length-1].y+6};
+  for(var i=0;i<ex.length-1;i++){
+    if(num>=ex[i].num&&num<=ex[i+1].num){
+      var t=ex[i+1].num===ex[i].num?0.5:(num-ex[i].num)/(ex[i+1].num-ex[i].num);
+      return{x:Math.round(ex[i].x+t*(ex[i+1].x-ex[i].x)),y:Math.round(ex[i].y+t*(ex[i+1].y-ex[i].y))};
+    }
+  }
+  return null;
+}
+function buildAcuLookup(){
+  var lu={};
+  (state.data.acupoints||[]).forEach(function(a){
+    if(a.code){var c=a.code.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');lu[c]=a;}
+    if(a.name)lu[a.name.trim()]=a;
+  });
+  return lu;
+}
+function getMeridianCompletion(){
+  var lu=buildAcuLookup(),predef={},total=0,found=0,extra=0;
+  MERID.forEach(function(m){m[4].forEach(function(p){predef[p[0]]=true;predef[p[1]]=true;total++;if(lu[p[0]]||lu[p[1]])found++;});});
+  (state.data.acupoints||[]).forEach(function(a){
+    var code=a.code?a.code.trim().toUpperCase().replace(/[^A-Z0-9]/g,''):'';
+    var name=a.name?a.name.trim():'';
+    if(!predef[code]&&!predef[name]){
+      var pc=parseAcuCode(a.code);
+      if((pc&&MERID_BY_ID[pc.prefix])||(a.category&&MERID_BY_CAT[a.category])){extra++;found++;}
+    }
+  });
+  total+=extra;
+  return{total:total,found:found,pct:total?Math.round(found/total*100):0};
+}
+function showMeridianMap(){
+  state.view='meridian';showView('meridian');hideSubHeader();showFab(false);renderMeridianMap();
+  var ca=document.getElementById('content-area');if(ca)ca.scrollTop=0;
+}
+function renderMeridianMap(){
+  var el=document.getElementById('view-meridian'),lu=buildAcuLookup();
+  var svg='<svg viewBox="0 0 260 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;height:auto">';
+  // Body silhouette
+  svg+='<g opacity="0.1" fill="none" stroke="currentColor" stroke-linecap="round">';
+  svg+='<ellipse cx="130" cy="30" rx="20" ry="23" stroke-width="1.5"/>';
+  svg+='<line x1="130" y1="53" x2="130" y2="62" stroke-width="10"/>';
+  svg+='<line x1="75" y1="68" x2="185" y2="68" stroke-width="5"/>';
+  svg+='<path d="M82 68L78 192Q130 210 182 192L178 68" fill="currentColor" stroke="none"/>';
+  svg+='<path d="M72 68Q55 110 48 142Q40 178 34 210Q28 232 24 252" stroke-width="5.5"/>';
+  svg+='<path d="M188 68Q205 110 212 142Q220 178 226 210Q232 232 236 252" stroke-width="5.5"/>';
+  svg+='<path d="M108 196Q100 250 96 300Q92 350 88 408Q86 435 84 458" stroke-width="7"/>';
+  svg+='<path d="M152 196Q160 250 164 300Q168 350 172 408Q174 435 176 458" stroke-width="7"/>';
+  svg+='</g>';
+  svg+='<g opacity="0.06" stroke="currentColor" fill="none" stroke-width="0.8">';
+  svg+='<line x1="122" y1="25" x2="128" y2="25"/><line x1="132" y1="25" x2="138" y2="25"/>';
+  svg+='<path d="M128 32Q130 36 132 32"/>';
+  svg+='<line x1="125" y1="41" x2="135" y2="41"/>';
+  svg+='</g>';
+  // Build predefined lookup for matching
+  var predef={};
+  MERID.forEach(function(m){m[4].forEach(function(p){predef[p[0]]=true;predef[p[1]]=true;});});
+  var totalPts=0,foundPts=0,meridStats=[];
+  // Track extra points per meridian
+  var extraByMerid={};
+  MERID.forEach(function(m){extraByMerid[m[0]]=[];});
+  // Find user acupoints NOT in predefined list → place them dynamically
+  (state.data.acupoints||[]).forEach(function(a){
+    var code=a.code?a.code.trim().toUpperCase().replace(/[^A-Z0-9]/g,''):'';
+    var name=a.name?a.name.trim():'';
+    if(predef[code]||predef[name])return;// already in predefined
+    var merid=null,pc=parseAcuCode(a.code);
+    if(pc&&MERID_BY_ID[pc.prefix])merid=MERID_BY_ID[pc.prefix];
+    else if(a.category&&MERID_BY_CAT[a.category])merid=MERID_BY_CAT[a.category];
+    if(!merid)return;
+    var pos=null;
+    if(pc)pos=interpolateMeridPos(merid,pc.num);
+    if(!pos){// Fallback: place near middle of meridian path
+      var pts=merid[4];if(pts.length){var mi=Math.floor(pts.length/2);pos={x:pts[mi][2]+(Math.random()*8-4),y:pts[mi][3]+(Math.random()*8-4)};}
+    }
+    if(pos)extraByMerid[merid[0]].push({name:name||code,code:a.code||'',x:pos.x,y:pos.y});
+  });
+  MERID.forEach(function(m){
+    var mid=m[0],mfull=m[2],mc=m[3],pts=m[4],mFound=0;
+    // Draw meridian path
+    if(pts.length>1){
+      var pd='M'+pts[0][2]+' '+pts[0][3];
+      for(var i=1;i<pts.length;i++){
+        var px=pts[i-1][2],py=pts[i-1][3],cx=pts[i][2],cy=pts[i][3];
+        var mx2=(px+cx)/2,my2=(py+cy)/2;
+        pd+=' Q'+px+' '+py+' '+mx2+' '+my2;
+      }
+      pd+=' L'+pts[pts.length-1][2]+' '+pts[pts.length-1][3];
+      svg+='<path d="'+pd+'" fill="none" stroke="'+mc+'" stroke-width="1.2" opacity="0.3" stroke-linecap="round"/>';
+    }
+    // Draw predefined points
+    pts.forEach(function(pt){
+      var code=pt[0],name=pt[1],px=pt[2],py=pt[3];
+      var isActive=!!(lu[code]||lu[name]);
+      totalPts++;
+      if(isActive){foundPts++;mFound++;}
+      if(isActive){
+        svg+='<circle cx="'+px+'" cy="'+py+'" r="6" fill="'+mc+'" opacity="0.2"/>';
+        svg+='<circle cx="'+px+'" cy="'+py+'" r="3.5" fill="'+mc+'" class="merid-dot-active"><title>'+code+' '+name+'</title></circle>';
+      }else{
+        svg+='<circle cx="'+px+'" cy="'+py+'" r="2.5" fill="'+mc+'" opacity="0.18"><title>'+code+' '+name+'</title></circle>';
+      }
+    });
+    // Draw dynamically placed extra points
+    var extras=extraByMerid[mid]||[];
+    extras.forEach(function(ep){
+      totalPts++;foundPts++;mFound++;
+      svg+='<circle cx="'+ep.x+'" cy="'+ep.y+'" r="5.5" fill="none" stroke="'+mc+'" stroke-width="1" opacity="0.4"/>';
+      svg+='<circle cx="'+ep.x+'" cy="'+ep.y+'" r="3" fill="'+mc+'" class="merid-dot-active"><title>'+(ep.code?ep.code+' ':'')+ep.name+'</title></circle>';
+    });
+    meridStats.push({id:mid,n:m[1],full:mfull,c:mc,total:pts.length+extras.length,found:mFound});
+  });
+  svg+='</svg>';
+  // Legend
+  var legend='<div class="merid-legend">'+MERID.map(function(m){
+    return'<span class="merid-legend-item"><span class="merid-legend-dot" style="background:'+m[3]+'"></span>'+esc(m[1])+'</span>';
+  }).join('')+'</div>';
+  // Stats
+  var pct=totalPts?Math.round(foundPts/totalPts*100):0;
+  var stats='<div class="merid-stats"><div class="merid-stats-title"><i class="fa-solid fa-chart-bar"></i> 各經脈進度</div>';
+  stats+='<div class="merid-progress-total"><span class="big">'+foundPts+' / '+totalPts+'</span><span class="label">已完成穴位 ('+pct+'%)</span></div>';
+  meridStats.forEach(function(ms){
+    var mp=ms.total?Math.round(ms.found/ms.total*100):0;
+    stats+='<div class="merid-stat-row"><span class="merid-stat-dot" style="background:'+ms.c+'"></span><span class="merid-stat-name">'+esc(ms.full)+'</span><span class="merid-stat-bar"><span style="width:'+mp+'%;background:'+ms.c+'"></span></span><span class="merid-stat-num">'+ms.found+'/'+ms.total+'</span></div>';
+  });
+  stats+='</div>';
+  el.innerHTML='<div class="detail-header" style="margin-bottom:14px"><button class="detail-back" data-action="back-meridian"><i class="fa-solid fa-chevron-left"></i></button><div class="detail-title"><i class="fa-solid fa-person-rays" style="color:var(--accent);margin-right:6px"></i>經脈穴位圖</div></div>'+legend+'<div class="merid-map-wrap">'+svg+'</div>'+stats;
 }
 
 /* === DETAIL === */
@@ -1091,7 +1334,45 @@ function getSelPillValue(id){
 function setupImageUpload(){var z=document.getElementById('img-upload-zone'),fi=document.getElementById('img-file-input');if(!z||!fi)return;z.addEventListener('click',function(e){if(e.target===fi)return;fi.click();});z.addEventListener('dragover',function(e){e.preventDefault();z.classList.add('dragover');});z.addEventListener('dragleave',function(){z.classList.remove('dragover');});z.addEventListener('drop',function(e){e.preventDefault();z.classList.remove('dragover');handleFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){handleFiles(fi.files);fi.value='';});}
 function handleFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('image/'))continue;state.formImages.pending.push({file:files[i],previewUrl:URL.createObjectURL(files[i]),uploading:false});}renderImagePreviews();}
 function renderImagePreviews(){var el=document.getElementById('img-previews');if(!el)return;var h='';state.formImages.existing.forEach(function(u,i){h+='<div class="img-preview"><img src="'+esc(u)+'" alt=""><button class="remove-img" data-action="rm-existing" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';});state.formImages.pending.forEach(function(p,i){h+='<div class="img-preview"><img src="'+p.previewUrl+'" alt="">'+(p.uploading?'<div class="upload-progress"><i class="fa-solid fa-spinner fa-spin"></i></div>':'')+'<button class="remove-img" data-action="rm-pending" data-idx="'+i+'"><i class="fa-solid fa-xmark"></i></button></div>';});el.innerHTML=h;}
-function checkDupe(sec,field,val,exId){var w=document.getElementById('dupe-warn');if(!w)return;if(!val||!val.trim()){w.style.display='none';return;}var v=val.trim().toLowerCase();var d=state.data[sec].find(function(i){if(exId&&i.id===exId)return false;var iv=i[field];return iv&&iv.trim().toLowerCase()===v;});if(d){w.style.display='';w.innerHTML='<i class="fa-solid fa-triangle-exclamation"></i> 已存在相同名稱'+(d.category?'（'+esc(d.category)+'）':'');}else w.style.display='none';}
+function checkDupe(sec,field,val,exId){
+  var w=document.getElementById('dupe-warn');if(!w)return;
+  if(!val||!val.trim()){w.style.display='none';return;}
+  var v=val.trim().toLowerCase();
+  var matches=[];
+  // Check same section + other related sections
+  var searchSecs=[sec];
+  if(sec==='herbs'||sec==='formulas')searchSecs=['herbs','formulas'];
+  if(sec==='acupoints')searchSecs=['acupoints'];
+  searchSecs.forEach(function(ss){
+    var nf=SECTIONS[ss].nameField;
+    (state.data[ss]||[]).forEach(function(i){
+      if(exId&&i.id===exId&&ss===sec)return;
+      var iv=i[nf];if(!iv)return;
+      var ivl=iv.trim().toLowerCase();
+      var sim=0;
+      if(ivl===v){sim=100;}
+      else if(ivl.indexOf(v)!==-1||v.indexOf(ivl)!==-1){sim=80;}
+      else{
+        // character overlap score
+        var common=0;
+        for(var ci=0;ci<v.length;ci++){if(ivl.indexOf(v[ci])!==-1)common++;}
+        sim=v.length?Math.round(common/Math.max(v.length,ivl.length)*100):0;
+        if(sim<50)sim=0;
+      }
+      if(sim>0)matches.push({name:iv,section:ss,category:i.category||'',sim:sim});
+    });
+  });
+  matches.sort(function(a,b){return b.sim-a.sim;});
+  matches=matches.slice(0,5);
+  if(matches.length){
+    var secNames={herbs:'中藥',formulas:'藥方',acupoints:'穴道',theories:'筆記'};
+    var html='<i class="fa-solid fa-triangle-exclamation"></i> 疑似重複：'+matches.map(function(m){
+      var tag=m.sim===100?'完全相同':'相似';
+      return'<span class="dupe-match" style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px;padding:1px 7px;border-radius:8px;background:'+(m.sim===100?'var(--danger-light)':'var(--gold-light)')+';color:'+(m.sim===100?'var(--danger)':'var(--gold)')+';font-weight:700;font-size:0.76rem">'+esc(m.name)+'<span style="font-weight:400;opacity:0.7;font-size:0.68rem">'+esc(secNames[m.section]||'')+(m.category?' · '+esc(m.category):'')+'</span></span>';
+    }).join('');
+    w.style.display='';w.innerHTML=html;
+  }else w.style.display='none';
+}
 
 function submitForm(){
   var sec=state.section,sd=SECTIONS[sec],isEdit=state.editing&&state.currentItem,item=isEdit?Object.assign({},state.currentItem):{};
@@ -1135,16 +1416,21 @@ function renderQuizSetup(){
     '<div class="form-group"><label>級別</label><select id="q-level"><option value="">全部</option></select></div>'+
     '<div class="form-group"><label>分類</label><select id="q-category"><option value="">全部</option></select></div>'+
     '<div class="form-group"><label>篩選</label><select id="q-mode"><option value="all">全部項目</option><option value="due"'+(due>0?' selected':'')+'>待複習</option><option value="new">未學習</option></select></div>'+
+    '<div class="form-group"><label>考核範圍 <span style="font-weight:400;color:var(--text-2);font-size:0.75rem">（點擊切換）</span></label><div class="sel-pills" id="q-fields" data-seltype="multi"></div></div>'+
     '<div class="form-group"><label>題型</label><select id="q-type"><option value="flip">翻卡</option><option value="mcq">選擇題</option><option value="fill">填充題</option><option value="mix" selected>混合</option></select></div>'+
     '<div class="form-group"><label>題數</label><select id="q-count"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="0">全部</option></select></div>'+
     '<button class="btn-primary" data-action="start-quiz" style="width:100%;padding:13px;margin-top:6px"><i class="fa-solid fa-play"></i> 開始測驗</button></div>';
-  document.getElementById('q-section').addEventListener('change',updateQF);updateQF();
+  document.getElementById('q-section').addEventListener('change',updateQF);
+  document.getElementById('q-fields').addEventListener('click',function(e){var p=e.target.closest('.sel-pill');if(p)p.classList.toggle('chosen');});
+  updateQF();
 }
-function updateQF(){var s=document.getElementById('q-section').value;document.getElementById('q-level').innerHTML='<option value="">全部</option>'+getLevels(s).map(function(l){return'<option value="'+esc(l)+'">'+esc(l)+'</option>';}).join('');document.getElementById('q-category').innerHTML='<option value="">全部</option>'+getUsedCategories(s).map(function(c){return'<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');}
+function updateQF(){var s=document.getElementById('q-section').value;document.getElementById('q-level').innerHTML='<option value="">全部</option>'+getLevels(s).map(function(l){return'<option value="'+esc(l)+'">'+esc(l)+'</option>';}).join('');document.getElementById('q-category').innerHTML='<option value="">全部</option>'+getUsedCategories(s).map(function(c){return'<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');var qf=document.getElementById('q-fields');if(qf){var flds=QUIZ_FIELDS[s]||[];qf.innerHTML=flds.map(function(f){return'<span class="sel-pill chosen" data-val="'+esc(f)+'">'+esc(f)+'</span>';}).join('');}}
 function shuffle(arr){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr;}
 function pickQuizType(qtype){if(qtype==='mix')return['flip','mcq','fill'][Math.floor(Math.random()*3)];return qtype;}
 function genMCQData(sec,item,allItems){
   var sd=SECTIONS[sec],bf=sd.quizBack(item);
+  var qf=state.quiz.fields;
+  if(qf&&qf.length)bf=filterBackFields(bf,qf);
   var fields=bf.filter(function(f){return f.value&&f.value.length>0;});
   if(!fields.length)return null;
   var field=fields[Math.floor(Math.random()*fields.length)];
@@ -1162,19 +1448,30 @@ function genMCQData(sec,item,allItems){
 }
 function genFillData(sec,item){
   var sd=SECTIONS[sec],bf=sd.quizBack(item);
+  var qf=state.quiz.fields;
+  if(qf&&qf.length)bf=filterBackFields(bf,qf);
   var fields=bf.filter(function(f){return f.value&&f.value.length>0&&f.value.length<40;});
   if(!fields.length)return null;
   var field=fields[Math.floor(Math.random()*fields.length)];
   return{clueLabel:field.label,clueValue:field.value,hint:sd.quizHint(item),answer:sd.quizFront(item)};
 }
+function getSelectedQuizFields(){
+  var chosen=[];document.querySelectorAll('#q-fields .sel-pill.chosen').forEach(function(p){chosen.push(p.dataset.val);});
+  return chosen;
+}
+function filterBackFields(bf,fields){
+  if(!fields||!fields.length)return bf;
+  return bf.filter(function(f){return fields.indexOf(f.label)!==-1;});
+}
 function startQuiz(){
   var s=document.getElementById('q-section').value,lv=document.getElementById('q-level').value,cat=document.getElementById('q-category').value,mode=document.getElementById('q-mode').value,qtype=document.getElementById('q-type').value,cnt=parseInt(document.getElementById('q-count').value,10);
+  var qfields=getSelectedQuizFields();
   var pool=state.data[s].slice();if(lv)pool=pool.filter(function(i){return i.level===lv;});if(cat)pool=pool.filter(function(i){return i.category===cat;});
   var now=Date.now();if(mode==='due')pool=pool.filter(function(i){return i.srs&&i.srs.nextReview&&i.srs.nextReview<=now;});else if(mode==='new')pool=pool.filter(function(i){return!i.srs||!i.srs.lastReview;});
   if(!pool.length){showAlert('沒有符合條件的項目');return;}
   shuffle(pool);
   if(cnt>0&&pool.length>cnt)pool=pool.slice(0,cnt);
-  state.quiz={active:true,section:s,cards:pool,idx:0,flipped:false,results:[],qtype:qtype,answered:false,selected:null,curType:null};
+  state.quiz={active:true,section:s,cards:pool,idx:0,flipped:false,results:[],qtype:qtype,answered:false,selected:null,curType:null,fields:qfields};
   nextQuizQ();
 }
 function nextQuizQ(){
@@ -1192,7 +1489,8 @@ function renderQC(){
   var header='<div class="quiz-progress"><span>'+(q.idx+1)+' / '+q.cards.length+'</span><div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:'+prog+'%"></div></div><button style="background:transparent;border:none;color:var(--text-2);cursor:pointer;font-size:0.83rem" data-action="quit-quiz">結束</button></div>';
   var typeLabel=q.curType==='mcq'?'<span class="q-type-badge mcq"><i class="fa-solid fa-list-check"></i> 選擇題</span>':q.curType==='fill'?'<span class="q-type-badge fill"><i class="fa-solid fa-pen-fancy"></i> 填充題</span>':'<span class="q-type-badge flip"><i class="fa-solid fa-clone"></i> 翻卡</span>';
   if(q.curType==='flip'){
-    var bf=sd.quizBack(item),bi='';if(item.images&&item.images.length)bi='<div class="img-gallery" style="margin-top:10px">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" style="max-height:70px;width:auto;aspect-ratio:auto" alt="">';}).join('')+'</div>';
+    var bf=sd.quizBack(item);if(q.fields&&q.fields.length)bf=filterBackFields(bf,q.fields);
+    var bi='';if(item.images&&item.images.length)bi='<div class="img-gallery" style="margin-top:10px">'+item.images.slice(0,4).map(function(u){return'<img src="'+esc(u)+'" style="max-height:70px;width:auto;aspect-ratio:auto" alt="">';}).join('')+'</div>';
     var rt=q.flipped?'<div class="quiz-rating"><button class="rate-again" data-action="rate" data-q="1"><span style="font-size:1.1rem">😟</span>重來</button><button class="rate-hard" data-action="rate" data-q="3"><span style="font-size:1.1rem">😐</span>困難</button><button class="rate-good" data-action="rate" data-q="4"><span style="font-size:1.1rem">😊</span>良好</button><button class="rate-easy" data-action="rate" data-q="5"><span style="font-size:1.1rem">🌟</span>容易</button></div>':'';
     el.innerHTML='<div class="quiz-card-wrap">'+header+typeLabel+'<div class="quiz-card '+(q.flipped?'flipped':'')+'" data-action="flip-card"><div class="quiz-face quiz-front"><div class="q-name">'+esc(sd.quizFront(item))+'</div><div class="q-hint">'+esc(sd.quizHint(item))+'</div><div class="q-tap">點擊翻轉</div></div><div class="quiz-face quiz-back">'+bf.map(function(f){return'<div class="q-field"><div class="q-field-label">'+esc(f.label)+'</div><div class="q-field-value">'+esc(f.value)+'</div></div>';}).join('')+bi+'</div></div>'+rt+'</div>';
   }else if(q.curType==='mcq'){
@@ -1331,6 +1629,8 @@ document.addEventListener('click',function(e){
     case 'rm-ftag':state.formFormulaTags.splice(parseInt(tgt.dataset.idx,10),1);refreshFormulaTags();break;
     case 'add-ftag':if(tgt.dataset.name&&state.formFormulaTags.indexOf(tgt.dataset.name)===-1){state.formFormulaTags.push(tgt.dataset.name);refreshFormulaTags();}break;
     case 'goto-formula':var fn=tgt.dataset.fname;if(fn){var fm=state.data.formulas.find(function(f){return f.name===fn;});if(fm)openDetail('formulas',fm.id);else toast('找不到藥方「'+fn+'」');}break;
+    case 'show-meridian':showMeridianMap();break;
+    case 'back-meridian':backToList();break;
   }
 });
 document.getElementById('level-pills').addEventListener('click',function(e){var p=e.target.closest('.pill');if(p)filterLevel(p.dataset.level||null);});
@@ -1356,6 +1656,7 @@ document.addEventListener('keydown',function(e){if(document.getElementById('ligh
     if(dx>80&&Math.abs(dy)<80){
       if(state.view==='detail'){backToList();}
       else if(state.view==='form'){cancelForm();}
+      else if(state.view==='meridian'){backToList();}
       else if(state.view==='settings'){switchTab(state.tab==='settings'?'home':(state.tab||'home'));}
     }
   },{passive:true});
