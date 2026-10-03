@@ -20,28 +20,28 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 <style>
 :root {
-  --bg-0:#fef5ee;--bg-1:#fae8d8;--bg-card:#fffbf7;--bg-card-hover:#fff3ea;
-  --text-0:#3d2417;--text-1:#7a5c4f;--text-2:#a68b7b;
+  --bg-0:#f8ead8;--bg-1:#f0d9c0;--bg-card:#fffbf7;--bg-card-hover:#fff3ea;
+  --text-0:#2c1810;--text-1:#6b4a3a;--text-2:#9a7a68;
   --accent:#d97748;--accent-light:#fef0e6;--accent-hover:#c4643a;
   --gold:#c49a3d;--gold-light:#fdf6e3;
   --danger:#c94040;--danger-light:#fde8e8;
-  --border:#e8d0bc;--border-light:#f0dece;
-  --shadow:0 2px 14px rgba(80,40,10,0.07);
-  --shadow-lg:0 8px 32px rgba(80,40,10,0.12);
+  --border:#dcc0a6;--border-light:#e8d0bc;
+  --shadow:0 2px 14px rgba(80,40,10,0.09);
+  --shadow-lg:0 8px 32px rgba(80,40,10,0.14);
   --radius:14px;--radius-sm:10px;--radius-lg:20px;
   --nav-h:62px;--header-h:54px;
   --font:'Nunito','Noto Sans TC',sans-serif;
   --transition:0.25s cubic-bezier(0.4,0,0.2,1);
 }
 html.dark {
-  --bg-0:#1a1210;--bg-1:#241c18;--bg-card:#2e231d;--bg-card-hover:#382c24;
-  --text-0:#f0dcc8;--text-1:#b89a84;--text-2:#7d6555;
+  --bg-0:#141010;--bg-1:#1e1714;--bg-card:#2a201a;--bg-card-hover:#342820;
+  --text-0:#f2dece;--text-1:#bfa08a;--text-2:#7d6555;
   --accent:#e09060;--accent-light:#2e2118;--accent-hover:#eda878;
   --gold:#d4a860;--gold-light:#2a2214;
   --danger:#e05050;--danger-light:#2e1818;
-  --border:#3e3028;--border-light:#302420;
-  --shadow:0 2px 14px rgba(0,0,0,0.3);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  --border:#3e3028;--border-light:#2c2218;
+  --shadow:0 2px 14px rgba(0,0,0,0.35);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.45);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -136,9 +136,9 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
   border-left:4px solid var(--accent);box-shadow:var(--shadow);cursor:pointer;transition:var(--transition)}
 .card:hover{background:var(--bg-card-hover);transform:translateX(2px)}
 .card:active{transform:scale(0.98)}
-.card-title{font-weight:800;font-size:1.02rem;margin-bottom:2px;display:flex;align-items:center;gap:7px}
-.card-sub{font-size:0.8rem;color:var(--text-2);margin-bottom:3px}
-.card-preview{font-size:0.84rem;color:var(--text-1);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-title{font-weight:900;font-size:1.15rem;margin-bottom:3px;display:flex;align-items:center;gap:7px;letter-spacing:0.2px}
+.card-sub{font-size:0.85rem;color:var(--text-1);margin-bottom:4px;font-weight:700}
+.card-preview{font-size:0.86rem;color:var(--text-1);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-meta{display:flex;gap:7px;margin-top:5px;font-size:0.73rem;color:var(--text-2);flex-wrap:wrap}
 .card-meta span{display:flex;align-items:center;gap:3px}
 .card-thumbs{display:flex;gap:4px;margin-top:7px}
@@ -161,7 +161,7 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .detail-back{width:36px;height:36px;border:none;background:var(--bg-1);color:var(--text-1);border-radius:50%;
   cursor:pointer;font-size:0.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition)}
 .detail-back:hover{background:var(--accent-light);color:var(--accent)}
-.detail-title{font-weight:900;font-size:1.4rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-title{font-weight:900;font-size:1.55rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.3px}
 .detail-actions{display:flex;gap:5px;flex-shrink:0}
 .detail-actions button{width:34px;height:34px;border:none;border-radius:50%;cursor:pointer;
   display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:var(--transition)}
@@ -169,9 +169,9 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .btn-edit:hover{background:var(--gold);color:#fff}
 .btn-del{background:var(--danger-light);color:var(--danger)}
 .btn-del:hover{background:var(--danger);color:#fff}
-.detail-section{margin-bottom:16px}
-.detail-label{font-size:0.76rem;color:var(--text-2);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
-.detail-value{font-size:0.93rem;line-height:1.7;white-space:pre-wrap}
+.detail-section{margin-bottom:18px}
+.detail-label{font-size:0.82rem;color:var(--text-2);font-weight:800;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px}
+.detail-value{font-size:0.96rem;line-height:1.75;white-space:pre-wrap}
 .detail-value.empty{color:var(--text-2);font-style:italic;font-size:0.84rem}
 .detail-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .badge{padding:4px 10px;border-radius:14px;font-size:0.74rem;font-weight:700}
@@ -189,6 +189,14 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 
 /* === FORM === */
 .form-title{font-weight:800;font-size:1.15rem;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+/* Bold toolbar */
+.fmt-toolbar{display:flex;gap:4px;margin-bottom:4px}
+.fmt-btn{width:30px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg-0);
+  color:var(--text-1);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:0.82rem;font-weight:900;transition:var(--transition);flex-shrink:0}
+.fmt-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.fmt-btn:active{transform:scale(0.92)}
+.fmt-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:0.82rem;color:var(--text-1);font-weight:700;margin-bottom:4px}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 13px;
@@ -1181,12 +1189,12 @@ function renderDetail(){
   var fh='';sd.fields.forEach(function(fd){
     if(fd.key===sd.nameField)return;var val=it[fd.key];
     if(fd.key==='tags'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+val.split(',').map(function(t){return'<span class="badge badge-accent">'+esc(t.trim())+'</span>';}).join('')+'</div></div>';}
-    else if(fd.key==='content'&&val){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value" style="line-height:1.8">'+renderMD(val)+'</div></div>';}
     else if(fd.type==='multi-input'){var miArr=miToArr(val);if(miArr.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><ul style="margin:0;padding-left:18px">'+miArr.map(function(v){return'<li style="font-size:0.93rem;line-height:1.7">'+esc(v)+'</li>';}).join('')+'</ul></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else if(fd.type==='select-one'){var sv=it[fd.key];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(sv?'<div class="detail-badges"><span class="badge badge-accent">'+esc(sv)+'</span></div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
     else if(fd.type==='select-multi'){var mv=it[fd.key];var mvArr=mv?mv.split(',').map(function(s){return s.trim();}).filter(Boolean):[];fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div>'+(mvArr.length?'<div class="detail-badges">'+mvArr.map(function(v){return'<span class="badge badge-accent">'+esc(v)+'</span>';}).join('')+'</div>':'<div class="detail-value empty">未填寫</div>')+'</div>';}
     else if(fd.type==='herb-list'){var comp=it.composition;if(comp&&comp.length){var hasWeight=comp.some(function(c){return c.unit&&({'克':1,'兩':1,'斤':1})[c.unit];});fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+(hasWeight?' <span class="unit-toggle" id="unit-toggle"><button class="active" data-unit="克">克</button><button data-unit="兩">兩</button><button data-unit="斤">斤</button></span>':'')+'</div><div class="comp-list" id="comp-list-detail">'+comp.map(function(c){var doseStr=c.amount?(c.amount+(c.unit||'')):'';var prepStr=c.prep?'（'+c.prep+'）':'';return'<div class="comp-chip"><span class="c-name">'+esc(c.name)+'</span>'+(doseStr?'<span class="c-dose" data-amount="'+esc(c.amount||'')+'" data-unit="'+esc(c.unit||'')+'">'+esc(doseStr)+'</span>':'')+(prepStr?'<span class="c-prep">'+esc(prepStr)+'</span>':'')+'</div>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
     else if(fd.type==='formula-tags'){var rf=mergeFormulas(it);if(rf.length){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-badges">'+rf.map(function(f){return'<span class="badge badge-gold badge-link" data-action="goto-formula" data-fname="'+esc(f)+'">'+esc(f)+' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;margin-left:3px;opacity:0.6"></i></span>';}).join('')+'</div></div>';}else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value empty">未填寫</div></div>';}}
+    else if(fd.type==='textarea'||fd.type==='textarea-lg'){fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value '+(val?'':'empty')+'">'+(val?renderMD(val):'未填寫')+'</div></div>';}
     else{fh+='<div class="detail-section"><div class="detail-label">'+esc(fd.label)+'</div><div class="detail-value '+(val?'':'empty')+'">'+(val?esc(val):'未填寫')+'</div></div>';}
   });
   var ih='';if(it.images&&it.images.length){ih='<div class="detail-section"><div class="detail-label">圖片 ('+it.images.length+')</div><div class="img-gallery">'+it.images.map(function(u,i){return'<img src="'+esc(u)+'" alt="" data-action="lightbox" data-idx="'+i+'">';}).join('')+'</div></div>';}
@@ -1210,8 +1218,8 @@ function renderForm(){
   var fhtml='';sd.fields.forEach(function(fd){
     var val=isEdit?(it[fd.key]||''):'';
     if(fd.type==='text'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+(fd.required?' *':'')+'</label><input type="text" id="f-'+fd.key+'" value="'+esc(val)+'" placeholder="'+esc(fd.placeholder||'')+'">'+(fd.key===sd.nameField?'<div class="dupe-warn" id="dupe-warn" style="display:none"></div>':'')+'</div>';}
-    else if(fd.type==='textarea'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
-    else if(fd.type==='textarea-lg'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><textarea id="f-'+fd.key+'" style="min-height:180px" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
+    else if(fd.type==='textarea'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div class="fmt-toolbar"><button type="button" class="fmt-btn" data-fmt="bold" data-target="f-'+fd.key+'" title="粗體"><b>B</b></button><button type="button" class="fmt-btn" data-fmt="italic" data-target="f-'+fd.key+'" title="斜體"><i>I</i></button></div><textarea id="f-'+fd.key+'" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
+    else if(fd.type==='textarea-lg'){fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div class="fmt-toolbar"><button type="button" class="fmt-btn" data-fmt="bold" data-target="f-'+fd.key+'" title="粗體"><b>B</b></button><button type="button" class="fmt-btn" data-fmt="italic" data-target="f-'+fd.key+'" title="斜體"><i>I</i></button></div><textarea id="f-'+fd.key+'" style="min-height:180px" placeholder="'+esc(fd.placeholder||'')+'">'+esc(val)+'</textarea></div>';}
     else if(fd.type==='multi-input'){
       state.formMultiInputs[fd.key]=miToArr(val);
       fhtml+='<div class="form-group"><label>'+esc(fd.label)+'</label><div id="mi-wrap-'+fd.key+'">'+renderMultiInputHTML(fd.key,fd.placeholder)+'</div></div>';
@@ -1231,7 +1239,7 @@ function renderForm(){
   var catOpts=cats.map(function(c){return'<option value="'+esc(c)+'">';}).join('');
   var catSel='<div class="form-group"><label>'+esc(sd.categoryLabel)+'</label><input type="text" id="f-category" value="'+esc(dCat)+'" list="cat-list" placeholder="選擇或輸入新'+esc(sd.categoryLabel)+'"><datalist id="cat-list">'+catOpts+'</datalist></div>';
   el.innerHTML='<div class="form-title"><button class="detail-back" data-action="cancel-form"><i class="fa-solid fa-chevron-left"></i></button>'+(isEdit?'編輯':'新增')+sd.name+'</div><div class="form-row">'+lvSel+catSel+'</div>'+fhtml+'<div class="form-group"><label>圖片</label><div class="img-previews" id="img-previews"></div><div class="img-upload-zone" id="img-upload-zone"><i class="fa-solid fa-cloud-arrow-up"></i><p>點擊或拖拽上傳圖片</p><input type="file" id="img-file-input" multiple accept="image/*" style="display:none"></div></div><div class="form-submit"><button class="btn-secondary" data-action="cancel-form">取消</button><button class="btn-primary" data-action="submit-form">儲存</button></div>';
-  setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();setupSelPills();setupMultiInputEvents();
+  setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();setupSelPills();setupMultiInputEvents();setupFmtToolbar();
   var ni=document.getElementById('f-'+sd.nameField);if(ni){var exId=isEdit?it.id:null;var ck=debounce(function(){checkDupe(sec,sd.nameField,ni.value,exId);},300);ni.addEventListener('input',ck);}
 }
 function renderHerbListHTML(){
@@ -1420,6 +1428,30 @@ function getSelPillValue(id){
   var chosen=wrap.querySelectorAll('.sel-pill.chosen');
   var vals=[];chosen.forEach(function(p){vals.push(p.dataset.val);});
   return vals.join(',');
+}
+function setupFmtToolbar(){
+  document.querySelectorAll('.fmt-btn').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      var ta=document.getElementById(btn.dataset.target);if(!ta)return;
+      var start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
+      var sel=val.substring(start,end);
+      var wrap=btn.dataset.fmt==='bold'?'**':'*';
+      var wl=wrap.length;
+      // Check if already wrapped — toggle off
+      var before=val.substring(Math.max(0,start-wl),start);
+      var after=val.substring(end,end+wl);
+      if(before===wrap&&after===wrap){
+        ta.value=val.substring(0,start-wl)+sel+val.substring(end+wl);
+        ta.selectionStart=start-wl;ta.selectionEnd=end-wl;
+      }else{
+        ta.value=val.substring(0,start)+wrap+sel+wrap+val.substring(end);
+        if(sel.length){ta.selectionStart=start;ta.selectionEnd=end+wl*2;}
+        else{ta.selectionStart=ta.selectionEnd=start+wl;}
+      }
+      ta.focus();
+    });
+  });
 }
 function setupImageUpload(){var z=document.getElementById('img-upload-zone'),fi=document.getElementById('img-file-input');if(!z||!fi)return;z.addEventListener('click',function(e){if(e.target===fi)return;fi.click();});z.addEventListener('dragover',function(e){e.preventDefault();z.classList.add('dragover');});z.addEventListener('dragleave',function(){z.classList.remove('dragover');});z.addEventListener('drop',function(e){e.preventDefault();z.classList.remove('dragover');handleFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){handleFiles(fi.files);fi.value='';});}
 function handleFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('image/'))continue;state.formImages.pending.push({file:files[i],previewUrl:URL.createObjectURL(files[i]),uploading:false});}renderImagePreviews();}
