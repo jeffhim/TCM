@@ -85,9 +85,25 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .header-actions button:hover,.header-actions button.active{background:var(--accent-light);color:var(--accent)}
 .search-bar{display:none;padding:8px 14px;background:var(--bg-card);border-bottom:1px solid var(--border-light)}
 .search-bar.open{display:block}
+.search-bar{position:relative}
 .search-bar input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:24px;
   background:var(--bg-0);color:var(--text-0);font-size:16px}
 .search-bar input:focus{border-color:var(--accent);outline:none}
+.search-results{position:absolute;left:14px;right:14px;top:100%;background:var(--bg-card);border:1.5px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:60vh;overflow-y:auto;z-index:300;display:none}
+.search-results.open{display:block}
+.sr-group-title{font-size:0.72rem;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.6px;
+  padding:8px 14px 4px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--border-light)}
+.sr-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:var(--transition);border-bottom:1px solid var(--border-light)}
+.sr-item:last-child{border-bottom:none}
+.sr-item:hover,.sr-item:active{background:var(--accent-light)}
+.sr-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;flex-shrink:0;background:var(--bg-1);color:var(--text-2)}
+.sr-info{flex:1;min-width:0}
+.sr-name{font-weight:700;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-name em{font-style:normal;color:var(--accent);font-weight:900}
+.sr-sub{font-size:0.73rem;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-empty{padding:24px 14px;text-align:center;color:var(--text-2);font-size:0.86rem}
 .sub-header{flex-shrink:0;background:var(--bg-card);border-bottom:1px solid var(--border-light)}
 .pill-row{display:flex;gap:6px;padding:7px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .pill-row::-webkit-scrollbar{display:none}
@@ -462,7 +478,7 @@ html.dark .fill-result.wrong{background:#2e1414;color:#fca5a5}
       <button id="btn-settings" title="設定"><i class="fa-solid fa-gear"></i></button>
     </div>
   </header>
-  <div class="search-bar" id="search-bar"><input type="text" id="search-input" placeholder="搜尋…"></div>
+  <div class="search-bar" id="search-bar"><input type="text" id="search-input" placeholder="搜尋中藥、藥方、穴道、筆記…" autocomplete="off"><div class="search-results" id="search-results"></div></div>
   <div class="sub-header" id="sub-header">
     <div class="pill-row" id="level-pills"></div>
     <div class="pill-row" id="category-pills"></div>
@@ -853,8 +869,82 @@ function switchTab(tab){
 function showView(n){document.querySelectorAll('.content-area .view').forEach(function(v){v.classList.remove('active');});var el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
 function showFab(s){document.getElementById('fab').style.display=s?'flex':'none';}
 function toggleSearch(){var b=document.getElementById('search-bar'),btn=document.getElementById('btn-search');b.classList.toggle('open');btn.classList.toggle('active');if(b.classList.contains('open'))document.getElementById('search-input').focus();}
-function closeSearch(){document.getElementById('search-bar').classList.remove('open');document.getElementById('btn-search').classList.remove('active');}
-var onSearchD=debounce(function(v){if(state.section){state.filter[state.section].search=v;renderList();}},250);
+function closeSearch(){document.getElementById('search-bar').classList.remove('open');document.getElementById('btn-search').classList.remove('active');closeSearchResults();document.getElementById('search-input').value='';}
+/* === GLOBAL SEARCH === */
+function globalSearch(raw){
+  if(!raw||!raw.trim())return[];
+  var keywords=raw.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var results=[];
+  ALL_SECTIONS.forEach(function(sec){
+    var sd=SECTIONS[sec];
+    (state.data[sec]||[]).forEach(function(item){
+      var nm=(item[sd.nameField]||'').toLowerCase();
+      var cat=(item.category||'').toLowerCase();
+      var allText=nm+' '+cat;
+      // Collect extra searchable text
+      sd.fields.forEach(function(fd){
+        if(fd.key===sd.nameField)return;
+        if(fd.type==='herb-list'){
+          if(item.composition)item.composition.forEach(function(c){allText+=' '+(c.name||'');});
+        } else if(fd.type==='formula-tags'){
+          var rf=mergeFormulas(item);allText+=' '+rf.join(' ');
+        } else if(fd.type==='multi-input'){
+          allText+=' '+miToArr(item[fd.key]).join(' ');
+        } else {
+          var v=item[fd.key];if(v)allText+=' '+String(v);
+        }
+      });
+      if(item.tags)allText+=' '+item.tags;
+      if(item.level)allText+=' '+item.level;
+      allText=allText.toLowerCase();
+      var matched=keywords.every(function(kw){return allText.indexOf(kw)!==-1;});
+      if(matched){
+        // Score: name match > category match > field match
+        var score=0;
+        if(nm.indexOf(keywords[0])===0)score=100;
+        else if(nm.indexOf(keywords[0])!==-1)score=80;
+        else if(cat.indexOf(keywords[0])!==-1)score=50;
+        else score=20;
+        results.push({sec:sec,id:item.id,name:item[sd.nameField]||'(無標題)',cat:item.category||'',icon:sd.icon,secName:sd.name,score:score});
+      }
+    });
+  });
+  results.sort(function(a,b){return b.score-a.score;});
+  return results.slice(0,30);
+}
+function highlightMatch(text,query){
+  if(!query||!text)return esc(text||'');
+  var lower=text.toLowerCase(),idx=lower.indexOf(query.toLowerCase());
+  if(idx===-1)return esc(text);
+  return esc(text.substring(0,idx))+'<em>'+esc(text.substring(idx,idx+query.length))+'</em>'+esc(text.substring(idx+query.length));
+}
+function renderSearchResults(results,query){
+  var el=document.getElementById('search-results');
+  if(!results.length){
+    el.innerHTML='<div class="sr-empty"><i class="fa-solid fa-magnifying-glass" style="margin-right:5px"></i>找不到「'+esc(query)+'」的結果</div>';
+    el.classList.add('open');return;
+  }
+  var grouped={};results.forEach(function(r){if(!grouped[r.sec])grouped[r.sec]=[];grouped[r.sec].push(r);});
+  var html='';
+  ALL_SECTIONS.forEach(function(sec){
+    if(!grouped[sec])return;
+    var sd=SECTIONS[sec];
+    html+='<div class="sr-group-title"><i class="fa-solid '+sd.icon+'"></i> '+sd.name+'</div>';
+    grouped[sec].forEach(function(r){
+      html+='<div class="sr-item" data-action="sr-go" data-sec="'+r.sec+'" data-id="'+r.id+'">'+
+        '<div class="sr-icon"><i class="fa-solid '+r.icon+'"></i></div>'+
+        '<div class="sr-info"><div class="sr-name">'+highlightMatch(r.name,query)+'</div>'+
+        '<div class="sr-sub">'+esc(r.cat)+'</div></div></div>';
+    });
+  });
+  el.innerHTML=html;el.classList.add('open');
+}
+function closeSearchResults(){document.getElementById('search-results').classList.remove('open');}
+var onSearchD=debounce(function(v){
+  if(!v||!v.trim()){closeSearchResults();return;}
+  var results=globalSearch(v);
+  renderSearchResults(results,v.trim());
+},200);
 function hideSubHeader(){document.getElementById('sub-header').style.display='none';}
 function renderSubHeader(){
   var sh=document.getElementById('sub-header');sh.style.display='';var sec=state.section;if(!sec){sh.style.display='none';return;}
@@ -1631,6 +1721,7 @@ document.addEventListener('click',function(e){
     case 'goto-formula':var fn=tgt.dataset.fname;if(fn){var fm=state.data.formulas.find(function(f){return f.name===fn;});if(fm)openDetail('formulas',fm.id);else toast('找不到藥方「'+fn+'」');}break;
     case 'show-meridian':showMeridianMap();break;
     case 'back-meridian':backToList();break;
+    case 'sr-go':var srSec=tgt.closest('.sr-item').dataset.sec,srId=tgt.closest('.sr-item').dataset.id;if(srSec&&srId){closeSearch();openDetail(srSec,srId);}break;
   }
 });
 document.getElementById('level-pills').addEventListener('click',function(e){var p=e.target.closest('.pill');if(p)filterLevel(p.dataset.level||null);});
@@ -1640,6 +1731,8 @@ document.getElementById('logo-home').addEventListener('click',function(){switchT
 document.getElementById('btn-search').addEventListener('click',toggleSearch);
 document.getElementById('btn-settings').addEventListener('click',showSettings);
 document.getElementById('search-input').addEventListener('input',function(){onSearchD(this.value);});
+document.getElementById('search-input').addEventListener('keydown',function(e){if(e.key==='Escape'){closeSearch();e.preventDefault();}});
+document.addEventListener('click',function(e){var sr=document.getElementById('search-results');if(sr.classList.contains('open')&&!e.target.closest('.search-bar')){closeSearchResults();}});
 document.getElementById('fab').addEventListener('click',onFabClick);
 document.getElementById('lb-close').addEventListener('click',closeLightbox);
 document.getElementById('lb-prev').addEventListener('click',function(){lbNav(-1);});
