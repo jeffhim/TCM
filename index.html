@@ -1507,6 +1507,21 @@ function submitForm(){
   });
   item.level=(document.getElementById('f-level')||{}).value||'';item.category=(document.getElementById('f-category')||{}).value||'';
   var req=sd.fields.find(function(f){return f.required;});if(req&&!item[req.key]){showAlert('請填寫'+req.label);return;}
+  // Block exact duplicate names
+  var nf=sd.nameField,nv=(item[nf]||'').trim().toLowerCase();
+  if(nv){
+    var exactDupe=state.data[sec].find(function(i){
+      if(isEdit&&i.id===item.id)return false;
+      return(i[nf]||'').trim().toLowerCase()===nv;
+    });
+    if(exactDupe){
+      showConfirm('已存在同名項目「'+exactDupe[nf]+'」（'+esc(exactDupe.category||'未分類')+'）。\n確定仍要儲存嗎？','仍然儲存').then(function(ok){if(ok)doSubmitForm(sec,sd,isEdit,item);});
+      return;
+    }
+  }
+  doSubmitForm(sec,sd,isEdit,item);
+}
+function doSubmitForm(sec,sd,isEdit,item){
   if(!item.id)item.id=uid();
   var ups=[];var pc=state.formImages.pending.slice();var chain=Promise.resolve();
   pc.forEach(function(p,i){chain=chain.then(function(){state.formImages.pending[i].uploading=true;renderImagePreviews();return uploadImage(sec,item.id,p.file).then(function(u){ups.push(u);state.formImages.pending[i].uploading=false;}).catch(function(e){toast('圖片上傳失敗','error');state.formImages.pending[i].uploading=false;});});});
