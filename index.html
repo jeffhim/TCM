@@ -49,6 +49,8 @@ body{font-family:var(--font);background:var(--bg-0);color:var(--text-0);
   -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.6}
 a{color:var(--accent);text-decoration:none}
 input,select,textarea,button{font-family:inherit;font-size:16px}
+button,.card,.pill,.sel-pill,.nav-btn,.fab,.img-upload-zone,.sr-item,.merid-banner,.fmt-btn,[data-action]{
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -205,14 +207,15 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(217,119,72,0.1)}
 .form-group textarea{min-height:75px;resize:vertical;line-height:1.6}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.form-submit{display:flex;gap:10px;margin-top:22px}
-.form-submit button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;cursor:pointer;transition:var(--transition)}
+.form-submit{display:flex;gap:10px;margin-top:22px;padding-bottom:12px}
+.form-submit button{flex:1;padding:14px 12px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;cursor:pointer;transition:var(--transition);min-height:48px}
 .dupe-warn{color:var(--gold);font-size:0.79rem;margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;line-height:1.7}
 .img-upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:22px;text-align:center;
-  color:var(--text-2);cursor:pointer;transition:var(--transition);margin-top:7px}
+  color:var(--text-2);cursor:pointer;transition:var(--transition);margin-top:7px;position:relative}
 .img-upload-zone:hover,.img-upload-zone.dragover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
-.img-upload-zone i{font-size:1.6rem;margin-bottom:6px}
-.img-upload-zone p{font-size:0.83rem}
+.img-upload-zone i{font-size:1.6rem;margin-bottom:6px;pointer-events:none}
+.img-upload-zone p{font-size:0.83rem;pointer-events:none}
+.img-upload-zone input[type="file"]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 .img-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px;margin-top:8px}
 .img-preview{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border-light)}
 .img-preview img{width:100%;height:100%;object-fit:cover}
@@ -383,8 +386,8 @@ html.dark .fill-result.wrong{background:#2e1414;color:#fca5a5}
 .merid-banner-text .title{font-weight:800;font-size:0.92rem;margin-bottom:2px}
 .merid-banner-text .sub{font-size:0.78rem;color:var(--text-2)}
 .merid-banner-arrow{color:var(--text-2);font-size:0.85rem}
-.merid-map-wrap{display:flex;justify-content:center;padding:0 10px;margin-bottom:18px}
-.merid-map-wrap svg{width:100%;max-width:340px;height:auto}
+.merid-map-wrap{display:flex;justify-content:center;padding:0 6px;margin-bottom:18px}
+.merid-map-wrap svg{width:100%;max-width:360px;height:auto}
 .merid-dot-active{filter:drop-shadow(0 0 4px currentColor)}
 @keyframes meridPulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .merid-dot-active{animation:meridPulse 2s ease-in-out infinite}
@@ -1021,20 +1024,20 @@ function renderCard(sec,item){
 
 /* === MERIDIAN MAP === */
 var MERID=[
-['LU','肺經','手太陰肺經','#64748b',[['LU1','中府',90,94],['LU5','尺澤',52,142],['LU7','列缺',39,195],['LU9','太淵',37,210],['LU11','少商',22,252]]],
-['LI','大腸經','手陽明大腸經','#ca8a04',[['LI1','商陽',26,254],['LI4','合谷',28,238],['LI10','手三里',39,168],['LI11','曲池',44,142],['LI15','肩髃',73,70],['LI20','迎香',121,36]]],
-['HT','心經','手少陰心經','#e11d48',[['HT1','極泉',82,84],['HT3','少海',54,144],['HT7','神門',38,212],['HT9','少衝',28,255]]],
-['SI','小腸經','手太陽小腸經','#f43f5e',[['SI1','少澤',30,256],['SI3','後谿',32,240],['SI9','肩貞',78,78],['SI19','聽宮',110,28]]],
-['PC','心包經','手厥陰心包經','#dc2626',[['PC1','天池',86,98],['PC3','曲澤',50,141],['PC6','內關',40,188],['PC8','勞宮',30,230],['PC9','中衝',25,253]]],
-['TE','三焦經','手少陽三焦經','#ea580c',[['TE1','關衝',27,255],['TE5','外關',36,188],['TE14','肩髎',70,68],['TE17','翳風',108,32],['TE23','絲竹空',114,20]]],
-['ST','胃經','足陽明胃經','#d97706',[['ST2','四白',124,28],['ST6','頰車',114,44],['ST25','天樞',118,160],['ST34','梁丘',91,286],['ST36','足三里',88,320],['ST40','豐隆',86,355],['ST44','內庭',80,452]]],
-['SP','脾經','足太陰脾經','#c2410c',[['SP1','隱白',92,458],['SP3','太白',96,440],['SP6','三陰交',100,392],['SP9','陰陵泉',102,312],['SP10','血海',104,288]]],
-['GB','膽經','足少陽膽經','#16a34a',[['GB1','瞳子髎',142,24],['GB20','風池',110,52],['GB21','肩井',98,66],['GB30','環跳',100,198],['GB34','陽陵泉',86,316],['GB39','懸鐘',83,395],['GB41','足臨泣',79,448]]],
-['BL','膀胱經','足太陽膀胱經','#2563eb',[['BL1','睛明',126,24],['BL2','攢竹',122,18],['BL13','肺俞',118,102],['BL23','腎俞',116,152],['BL40','委中',90,304],['BL57','承山',87,365],['BL60','崑崙',84,408],['BL67','至陰',78,458]]],
-['KI','腎經','足少陰腎經','#4338ca',[['KI1','涌泉',94,462],['KI3','太谿',98,412],['KI6','照海',100,400],['KI10','陰谷',104,306],['KI27','俞府',122,86]]],
-['LR','肝經','足厥陰肝經','#15803d',[['LR1','大敦',90,460],['LR3','太衝',94,444],['LR8','曲泉',106,308],['LR14','期門',112,118]]],
-['CV','任脈','任脈','#7c3aed',[['CV3','中極',130,195],['CV4','關元',130,188],['CV6','氣海',130,172],['CV8','神闕',130,160],['CV12','中脘',130,135],['CV17','膻中',130,100],['CV22','天突',130,62],['CV24','承漿',130,44]]],
-['GV','督脈','督脈','#9333ea',[['GV4','命門',134,155],['GV14','大椎',134,66],['GV20','百會',130,8],['GV26','人中',130,38]]]
+['LU','肺經','手太陰肺經','#64748b',[['LU1','中府',86,100],['LU5','尺澤',55,168],['LU7','列缺',41,228],['LU9','太淵',37,244],['LU11','少商',22,282]]],
+['LI','大腸經','手陽明大腸經','#ca8a04',[['LI1','商陽',25,286],['LI4','合谷',30,264],['LI10','手三里',48,186],['LI11','曲池',50,168],['LI15','肩髃',72,88],['LI20','迎香',122,40]]],
+['HT','心經','手少陰心經','#e11d48',[['HT1','極泉',76,108],['HT3','少海',56,170],['HT7','神門',39,246],['HT9','少衝',31,286]]],
+['SI','小腸經','手太陽小腸經','#f43f5e',[['SI1','少澤',33,288],['SI3','後谿',34,268],['SI9','肩貞',74,94],['SI19','聽宮',110,32]]],
+['PC','心包經','手厥陰心包經','#dc2626',[['PC1','天池',82,112],['PC3','曲澤',54,166],['PC6','內關',44,216],['PC8','勞宮',32,258],['PC9','中衝',27,284]]],
+['TE','三焦經','手少陽三焦經','#ea580c',[['TE1','關衝',29,287],['TE5','外關',46,218],['TE14','肩髎',68,86],['TE17','翳風',108,34],['TE23','絲竹空',114,24]]],
+['ST','胃經','足陽明胃經','#d97706',[['ST2','四白',122,30],['ST6','頰車',114,50],['ST25','天樞',116,190],['ST34','梁丘',100,350],['ST36','足三里',98,390],['ST40','豐隆',96,435],['ST44','內庭',88,506]]],
+['SP','脾經','足太陰脾經','#c2410c',[['SP1','隱白',104,510],['SP3','太白',106,496],['SP6','三陰交',110,458],['SP9','陰陵泉',114,384],['SP10','血海',114,354]]],
+['GB','膽經','足少陽膽經','#16a34a',[['GB1','瞳子髎',142,28],['GB20','風池',110,56],['GB21','肩井',100,80],['GB30','環跳',100,250],['GB34','陽陵泉',94,386],['GB39','懸鐘',92,460],['GB41','足臨泣',88,498]]],
+['BL','膀胱經','足太陽膀胱經','#2563eb',[['BL1','睛明',126,28],['BL2','攢竹',122,22],['BL13','肺俞',146,112],['BL23','腎俞',144,182],['BL40','委中',98,376],['BL57','承山',96,440],['BL60','崑崙',90,472],['BL67','至陰',84,510]]],
+['KI','腎經','足少陰腎經','#4338ca',[['KI1','涌泉',100,516],['KI3','太谿',108,474],['KI6','照海',110,466],['KI10','陰谷',116,376],['KI27','俞府',120,92]]],
+['LR','肝經','足厥陰肝經','#15803d',[['LR1','大敦',100,512],['LR3','太衝',102,498],['LR8','曲泉',116,374],['LR14','期門',110,130]]],
+['CV','任脈','任脈','#7c3aed',[['CV3','中極',130,240],['CV4','關元',130,228],['CV6','氣海',130,208],['CV8','神闕',130,190],['CV12','中脘',130,155],['CV17','膻中',130,115],['CV22','天突',130,74],['CV24','承漿',130,52]]],
+['GV','督脈','督脈','#9333ea',[['GV4','命門',136,182],['GV14','大椎',136,78],['GV20','百會',130,10],['GV26','人中',130,46]]]
 ];
 var MERID_ALIAS={SJ:'TE',RN:'CV',DU:'GV',KD:'KI',LV:'LR'};
 var MERID_BY_ID={},MERID_BY_CAT={};
@@ -1090,22 +1093,54 @@ function showMeridianMap(){
 }
 function renderMeridianMap(){
   var el=document.getElementById('view-meridian'),lu=buildAcuLookup();
-  var svg='<svg viewBox="0 0 260 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;height:auto">';
-  // Body silhouette
-  svg+='<g opacity="0.1" fill="none" stroke="currentColor" stroke-linecap="round">';
-  svg+='<ellipse cx="130" cy="30" rx="20" ry="23" stroke-width="1.5"/>';
-  svg+='<line x1="130" y1="53" x2="130" y2="62" stroke-width="10"/>';
-  svg+='<line x1="75" y1="68" x2="185" y2="68" stroke-width="5"/>';
-  svg+='<path d="M82 68L78 192Q130 210 182 192L178 68" fill="currentColor" stroke="none"/>';
-  svg+='<path d="M72 68Q55 110 48 142Q40 178 34 210Q28 232 24 252" stroke-width="5.5"/>';
-  svg+='<path d="M188 68Q205 110 212 142Q220 178 226 210Q232 232 236 252" stroke-width="5.5"/>';
-  svg+='<path d="M108 196Q100 250 96 300Q92 350 88 408Q86 435 84 458" stroke-width="7"/>';
-  svg+='<path d="M152 196Q160 250 164 300Q168 350 172 408Q174 435 176 458" stroke-width="7"/>';
+  var svg='<svg viewBox="0 0 260 526" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;height:auto;display:block;margin:0 auto">';
+  // Anatomical body silhouette - front view
+  svg+='<g fill="currentColor" opacity="0.09" stroke="none">';
+  // Head
+  svg+='<path d="M130,7 C143,7 154,13 158,24 C162,35 160,48 155,56 C150,62 143,66 138,67 L122,67 C117,66 110,62 105,56 C100,48 98,35 102,24 C106,13 117,7 130,7 Z"/>';
+  // Ears
+  svg+='<path d="M100,30 C97,28 95,32 95,38 C95,44 97,48 100,46 Z"/>';
+  svg+='<path d="M160,30 C163,28 165,32 165,38 C165,44 163,48 160,46 Z"/>';
+  // Neck
+  svg+='<path d="M118,66 C116,70 115,75 114,80 L146,80 C145,75 144,70 142,66 Z"/>';
+  // Torso
+  svg+='<path d="M114,80 C102,82 84,85 72,90 C64,94 62,100 65,108 C68,114 74,124 78,138 C78,155 78,174 82,198 C84,212 88,228 96,244 C102,256 110,264 120,270 L140,270 C150,264 158,256 164,244 C172,228 176,212 178,198 C182,174 182,155 182,138 C186,124 192,114 195,108 C198,100 196,94 188,90 C176,85 158,82 146,80 Z"/>';
+  // Left leg
+  svg+='<path d="M107,258 C103,276 100,304 97,332 C96,350 95,364 94,378 C93,394 93,416 94,440 C94,456 92,468 90,480 C87,494 82,506 81,510 L83,515 L108,515 C108,510 109,498 110,480 C112,460 113,434 114,408 C115,392 116,378 118,360 C120,336 122,308 124,284 L124,270 Z"/>';
+  // Right leg
+  svg+='<path d="M153,258 C157,276 160,304 163,332 C164,350 165,364 166,378 C167,394 167,416 166,440 C166,456 168,468 170,480 C173,494 178,506 179,510 L177,515 L152,515 C152,510 151,498 150,480 C148,460 147,434 146,408 C145,392 144,378 142,360 C140,336 138,308 136,284 L136,270 Z"/>';
+  // Left arm
+  svg+='<path d="M65,106 C60,118 56,138 52,160 C48,178 45,198 42,220 C40,234 37,246 35,255 C32,266 28,278 26,288 C25,294 28,297 32,294 C35,288 38,278 40,268 C43,256 46,242 49,224 C52,204 56,182 60,162 C64,142 68,124 72,112 Z"/>';
+  // Right arm
+  svg+='<path d="M195,106 C200,118 204,138 208,160 C212,178 215,198 218,220 C220,234 223,246 225,255 C228,266 232,278 234,288 C235,294 232,297 228,294 C225,288 222,278 220,268 C217,256 214,242 211,224 C208,204 204,182 200,162 C196,142 192,124 188,112 Z"/>';
+  // Left hand
+  svg+='<path d="M26,286 C24,292 20,298 18,304 C17,308 19,310 22,308 C24,304 26,298 28,292 Z"/>';
+  svg+='<path d="M28,288 C26,296 24,304 22,310 C21,314 23,316 26,314 C28,308 29,300 30,294 Z"/>';
+  svg+='<path d="M30,290 C28,298 26,308 25,314 C24,318 26,320 29,318 C30,312 31,302 32,296 Z"/>';
+  svg+='<path d="M32,290 C31,298 30,306 30,312 C30,316 32,318 34,315 C34,310 34,302 34,296 Z"/>';
+  svg+='<path d="M34,288 C35,294 36,300 37,305 C38,308 36,310 34,308 C33,304 33,296 33,292 Z"/>';
+  // Right hand
+  svg+='<path d="M234,286 C236,292 240,298 242,304 C243,308 241,310 238,308 C236,304 234,298 232,292 Z"/>';
+  svg+='<path d="M232,288 C234,296 236,304 238,310 C239,314 237,316 234,314 C232,308 231,300 230,294 Z"/>';
+  svg+='<path d="M230,290 C232,298 234,308 235,314 C236,318 234,320 231,318 C230,312 229,302 228,296 Z"/>';
+  svg+='<path d="M228,290 C229,298 230,306 230,312 C230,316 228,318 226,315 C226,310 226,302 226,296 Z"/>';
+  svg+='<path d="M226,288 C225,294 224,300 223,305 C222,308 224,310 226,308 C227,304 227,296 227,292 Z"/>';
+  // Left foot detail
+  svg+='<path d="M81,510 C78,512 76,514 78,516 L82,518 L108,518 L110,516 C110,514 108,512 108,515 Z"/>';
+  // Right foot detail
+  svg+='<path d="M179,510 C182,512 184,514 182,516 L178,518 L152,518 L150,516 C150,514 152,512 152,515 Z"/>';
   svg+='</g>';
-  svg+='<g opacity="0.06" stroke="currentColor" fill="none" stroke-width="0.8">';
-  svg+='<line x1="122" y1="25" x2="128" y2="25"/><line x1="132" y1="25" x2="138" y2="25"/>';
-  svg+='<path d="M128 32Q130 36 132 32"/>';
-  svg+='<line x1="125" y1="41" x2="135" y2="41"/>';
+  // Face and body details
+  svg+='<g fill="none" stroke="currentColor" opacity="0.06" stroke-width="0.8">';
+  svg+='<path d="M120,28 C121,26 124,25 126,27" stroke-width="1.2"/>';
+  svg+='<path d="M134,27 C136,25 139,26 140,28" stroke-width="1.2"/>';
+  svg+='<path d="M128,38 Q130,43 132,38"/>';
+  svg+='<path d="M126,49 Q130,52 134,49"/>';
+  svg+='</g>';
+  svg+='<g fill="currentColor" opacity="0.04" stroke="none">';
+  svg+='<circle cx="130" cy="190" r="3.5"/>';
+  svg+='<path d="M112,84 Q96,82 78,90" stroke="currentColor" fill="none" stroke-width="0.6" opacity="0.5"/>';
+  svg+='<path d="M148,84 Q164,82 182,90" stroke="currentColor" fill="none" stroke-width="0.6" opacity="0.5"/>';
   svg+='</g>';
   // Build predefined lookup for matching
   var predef={};
@@ -1238,7 +1273,7 @@ function renderForm(){
   var lvSel=levels.length?'<div class="form-group"><label>級別</label><select id="f-level"><option value="">— 無 —</option>'+levels.map(function(l){return'<option value="'+esc(l)+'"'+(l===dLv?' selected':'')+'>'+esc(l)+'</option>';}).join('')+'</select></div>':'<input type="hidden" id="f-level" value="">';
   var catOpts=cats.map(function(c){return'<option value="'+esc(c)+'">';}).join('');
   var catSel='<div class="form-group"><label>'+esc(sd.categoryLabel)+'</label><input type="text" id="f-category" value="'+esc(dCat)+'" list="cat-list" placeholder="選擇或輸入新'+esc(sd.categoryLabel)+'"><datalist id="cat-list">'+catOpts+'</datalist></div>';
-  el.innerHTML='<div class="form-title"><button class="detail-back" data-action="cancel-form"><i class="fa-solid fa-chevron-left"></i></button>'+(isEdit?'編輯':'新增')+sd.name+'</div><div class="form-row">'+lvSel+catSel+'</div>'+fhtml+'<div class="form-group"><label>圖片</label><div class="img-previews" id="img-previews"></div><div class="img-upload-zone" id="img-upload-zone"><i class="fa-solid fa-cloud-arrow-up"></i><p>點擊或拖拽上傳圖片</p><input type="file" id="img-file-input" multiple accept="image/*" style="display:none"></div></div><div class="form-submit"><button class="btn-secondary" data-action="cancel-form">取消</button><button class="btn-primary" data-action="submit-form">儲存</button></div>';
+  el.innerHTML='<div class="form-title"><button class="detail-back" data-action="cancel-form"><i class="fa-solid fa-chevron-left"></i></button>'+(isEdit?'編輯':'新增')+sd.name+'</div><div class="form-row">'+lvSel+catSel+'</div>'+fhtml+'<div class="form-group"><label>圖片</label><div class="img-previews" id="img-previews"></div><div class="img-upload-zone" id="img-upload-zone"><i class="fa-solid fa-cloud-arrow-up"></i><p>點擊或拖拽上傳圖片</p><input type="file" id="img-file-input" multiple accept="image/*"></div></div><div class="form-submit"><button class="btn-secondary" data-action="cancel-form">取消</button><button class="btn-primary" data-action="submit-form">儲存</button></div>';
   setupImageUpload();renderImagePreviews();setupHerbListEvents();setupFormulaTagsEvents();setupSelPills();setupMultiInputEvents();setupFmtToolbar();
   var ni=document.getElementById('f-'+sd.nameField);if(ni){var exId=isEdit?it.id:null;var ck=debounce(function(){checkDupe(sec,sd.nameField,ni.value,exId);},300);ni.addEventListener('input',ck);}
 }
